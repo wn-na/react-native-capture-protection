@@ -3,6 +3,10 @@
 #import "RNCaptureProtectionSpec.h"
 
 @interface CaptureProtection : NSObject <NativeCaptureProtectionSpec>
+- (void)recordEventDetected: (NSNotification*)notification;
+- (void)recordEventWithStatus: (NSNotification *)notification init: (Boolean)init;
+- (void)createRecordProtectionScreen;
+- (void)removeRecordProtectionScreen;
 #else
 #import <React/RCTBridgeModule.h>
 
