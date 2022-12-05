@@ -6,4 +6,5 @@
 //- (void)recordEventWithStatus: (NSNotification *)notification init: (Boolean)init;
 //- (void)createRecordProtectionScreen;
 //- (void)removeRecordProtectionScreen;
+//- (void)preventScreenshot: (Boolean)isStart;
 @end

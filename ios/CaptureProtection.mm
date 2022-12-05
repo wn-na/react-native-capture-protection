@@ -6,22 +6,31 @@
 static int TAG_RECORD_PROTECTION_SCREEN = -1002;
 
 @implementation CaptureProtection {
-  NSString* SCREEN_IMAGE;
-  bool hasRecordCapturedListener;
-  enum CaptureProtectionStatus {
-    INIT_RECORD_LISTENER,
-    REMOVE_RECORD_LISTENER,
-    RECORD_LISTENER_NOT_EXIST,
-    RECORD_LISTENER_EXIST,
-    RECORD_DETECTED_START,
-    RECORD_DETECTED_END,
-  };
+    bool hasRecordCapturedListener;
+    NSString* SCREEN_IMAGE;
+    UITextField* preventCaptureScreen;
+    enum CaptureProtectionStatus {
+        INIT_RECORD_LISTENER,
+        REMOVE_RECORD_LISTENER,
+        RECORD_LISTENER_NOT_EXIST,
+        RECORD_LISTENER_EXIST,
+        RECORD_DETECTED_START,
+        RECORD_DETECTED_END,
+    };
 }
 
 RCT_EXPORT_MODULE();
 
 - (NSArray<NSString *> *)supportedEvents {
   return @[@"CaptureProtectionListener"];
+}
+
+- (NSError *)convertNSError: (NSException *)exception {
+    return [NSError errorWithDomain:exception.name code:0 userInfo:@{
+        NSUnderlyingErrorKey: exception,
+        NSDebugDescriptionErrorKey: exception.userInfo ?: @{ },
+        NSLocalizedFailureReasonErrorKey: (exception.reason ?: @"unknown_reason")
+    }];
 }
 
 - (void)createRecordProtectionScreen {
@@ -72,6 +81,60 @@ RCT_EXPORT_MODULE();
       [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_DETECTED_END)}];
     }
   }
+}
+
+- (void)preventScreenshot: (Boolean)isStart {
+    NSLog(@"[CaptureProtection] Call preventScreenshot with %@", (isStart ? @"YES" : @"NO"));
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self->preventCaptureScreen == nil) {
+            self->preventCaptureScreen = [[UITextField alloc] init];
+            self->preventCaptureScreen.userInteractionEnabled = false;
+            UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
+            [window addSubview:self->preventCaptureScreen];
+            [window.layer.superlayer addSublayer:self->preventCaptureScreen.layer];
+            [self->preventCaptureScreen.layer.sublayers.firstObject addSublayer:window.layer];
+        }
+        [self->preventCaptureScreen setSecureTextEntry:isStart];
+    });
+}
+
+RCT_REMAP_METHOD(startPreventScreenshot,
+    startPreventScreenshotResolver: (RCTPromiseResolveBlock)resolve
+    startPreventScreenshotRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call startPreventScreenshot");
+    @try {
+        [self preventScreenshot:true];
+        resolve(@(preventCaptureScreen.isSecureTextEntry));
+    }
+    @catch (NSException *e) {
+        reject(@"startPreventScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]);
+    }
+};
+
+RCT_REMAP_METHOD(stopPreventScreenshot,
+    stopPreventScreenshotResolver: (RCTPromiseResolveBlock)resolve
+    stopPreventScreenshotRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call stopPreventScreenshot");
+    @try {
+        [self preventScreenshot:false];
+        resolve(@(preventCaptureScreen.isSecureTextEntry));
+    }
+    @catch (NSException *e) {
+        reject(@"stopPreventScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]); 
+    }
+};
+
+RCT_REMAP_METHOD(isPreventScreenshot,
+    isPreventScreenshotResolver: (RCTPromiseResolveBlock)resolve
+    isPreventScreenshotRejector: (RCTPromiseRejectBlock)reject
+) {
+    if (preventCaptureScreen != nil) {
+        resolve(@(preventCaptureScreen.isSecureTextEntry));
+    } else {
+        resolve(@(NO));
+    }
 }
 
 RCT_REMAP_METHOD(removeRecordCaptureProtecter,
