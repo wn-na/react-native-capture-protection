@@ -26,9 +26,9 @@ const CaptureNotificationEmitter = Platform.select({
 });
 
 /**
- * create listener `initCaptureProtectionModuleListener`
+ * create listener `addRecordEventListener`
  */
-function initCaptureProtectionModuleListener(
+function addRecordEventListener(
   callback: CaptureNotificationListenerCallback
 ): void {
   if (Platform.OS !== 'ios') {
@@ -45,16 +45,16 @@ function initCaptureProtectionModuleListener(
  *
  * if already exist `RecordCaptureProtecter` return `false`, otherwise return `true`
  */
-async function addRecordCaptureProtecter(
+async function startPreventRecording(
   screenName = 'ScreenRecordProtect.png'
 ): Promise<boolean> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
-      new Error('Only IOS Support addRecordCaptureProtecter function')
+      new Error('Only IOS Support startPreventRecording function')
     );
   }
   try {
-    const result = await CaptureProtectionModule?.addRecordCaptureProtecter?.(
+    const result = await CaptureProtectionModule?.startPreventRecording?.(
       screenName
     );
     return !!result;
@@ -68,14 +68,14 @@ async function addRecordCaptureProtecter(
  *
  * if any `RecordCaptureProtecter` is not exist, return `false`, otherwise return `true`
  */
-async function removeRecordCaptureProtecter(): Promise<boolean> {
+async function stopPreventRecording(): Promise<boolean> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
-      new Error('Only IOS Support removeRecordCaptureProtecter function')
+      new Error('Only IOS Support stopPreventRecording function')
     );
   }
   try {
-    return !!(await CaptureProtectionModule?.removeRecordCaptureProtecter?.());
+    return !!(await CaptureProtectionModule?.stopPreventRecording?.());
   } catch (e) {
     return Promise.reject(e);
   }
@@ -86,31 +86,56 @@ async function removeRecordCaptureProtecter(): Promise<boolean> {
  *
  * more information, visit `https://developer.apple.com/documentation/uikit/uiscreen/2921651-captured`
  */
-async function isCaptured(): Promise<boolean> {
+async function isRecording(): Promise<boolean> {
   if (Platform.OS !== 'ios') {
-    return Promise.reject(new Error('Only IOS Support isCaptured function'));
+    return Promise.reject(new Error('Only IOS Support isRecording function'));
   }
-  return !!(await CaptureProtectionModule?.isCaptured?.());
+  return !!(await CaptureProtectionModule?.isRecording?.());
 }
 
 /**
  * return `react-native-capture-protection` is init
  */
-async function hasRecordCapturedListener(): Promise<boolean> {
+async function hasRecordEventListener(): Promise<boolean> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(
-      new Error('Only IOS Support hasRecordCapturedListener function')
+      new Error('Only IOS Support hasRecordEventListener function')
     );
   }
-  return !!(await CaptureProtectionModule?.hasRecordCapturedListener?.());
+  return !!(await CaptureProtectionModule?.hasRecordEventListener?.());
 }
 
+async function startPreventScreenshot(): Promise<boolean> {
+  return await CaptureProtectionModule?.startPreventScreenshot?.();
+}
+async function stopPreventScreenshot(): Promise<boolean> {
+  return await CaptureProtectionModule?.stopPreventScreenshot?.();
+}
+async function isPreventScreenshot(): Promise<boolean> {
+  return await CaptureProtectionModule?.isPreventScreenshot?.();
+}
 export const CaptureProtection = {
-  initCaptureProtectionModuleListener,
-  isCaptured,
-  hasRecordCapturedListener,
-  addRecordCaptureProtecter,
-  removeRecordCaptureProtecter,
+  addRecordEventListener,
+  hasRecordEventListener,
+  startPreventRecording,
+  stopPreventRecording,
+  startPreventScreenshot,
+  stopPreventScreenshot,
+  isPreventScreenshot,
+  isRecording,
 };
 
 export { CaptureProtectionModuleStatus } from './type';
+
+/**
+ *
+ * addRecordEventListener
+ * 화면 녹화 방지 화면 세팅함수
+ * startPreventRecording
+ * 화면 녹화 방지 화면 제거함수
+ * stopPreventRecording
+ * 화면 녹화 이벤트 리스너 존재여부
+ * hasRecordEventListener
+ * 현재 녹화중인지 여부
+ * isRecording
+ */
