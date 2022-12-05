@@ -7,8 +7,8 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n';
 
 const CaptureProtectionModule = Platform.select({
-  ios: NativeModules.CaptureProtectionModule
-    ? NativeModules.CaptureProtectionModule
+  ios: NativeModules.CaptureProtection
+    ? NativeModules.CaptureProtection
     : new Proxy(
         {},
         {
@@ -35,7 +35,7 @@ function initCaptureProtectionModuleListener(
     return;
   }
   CaptureNotificationEmitter?.addListener?.(
-    'CaptureProtectionModuleListener',
+    'CaptureProtectionListener',
     callback
   );
 }
@@ -112,3 +112,5 @@ export const CaptureProtection = {
   addRecordCaptureProtecter,
   removeRecordCaptureProtecter,
 };
+
+export { CaptureProtectionModuleStatus } from './type';
