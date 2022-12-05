@@ -83,7 +83,7 @@ RCT_EXPORT_MODULE();
     }
 }
 
-- (void)preventScreenshot: (Boolean)isStart {
+- (void)preventScreenshot: (Boolean)isStart resolve: (RCTPromiseResolveBlock)resolve {
     NSLog(@"[CaptureProtection] Call preventScreenshot with %@", (isStart ? @"YES" : @"NO"));
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self->preventCaptureScreen == nil) {
@@ -95,6 +95,7 @@ RCT_EXPORT_MODULE();
             [self->preventCaptureScreen.layer.sublayers.firstObject addSublayer:window.layer];
         }
         [self->preventCaptureScreen setSecureTextEntry:isStart];
+        resolve(@(isStart ? self->preventCaptureScreen.isSecureTextEntry : !self->preventCaptureScreen.isSecureTextEntry));
     });
 }
 
@@ -104,8 +105,7 @@ RCT_REMAP_METHOD(startPreventScreenshot,
 ) {
     NSLog(@"[CaptureProtection] Call startPreventScreenshot");
     @try {
-        [self preventScreenshot:true];
-        resolve(@(preventCaptureScreen.isSecureTextEntry));
+        [self preventScreenshot:true resolve:resolve];
     }
     @catch (NSException *e) {
         reject(@"startPreventScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]);
@@ -118,8 +118,7 @@ RCT_REMAP_METHOD(stopPreventScreenshot,
 ) {
     NSLog(@"[CaptureProtection] Call stopPreventScreenshot");
     @try {
-        [self preventScreenshot:false];
-        resolve(@(!preventCaptureScreen.isSecureTextEntry));
+        [self preventScreenshot:false resolve:resolve];
     }
     @catch (NSException *e) {
         reject(@"stopPreventScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]); 
