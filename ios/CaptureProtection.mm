@@ -18,7 +18,7 @@ static int TAG_RECORD_PROTECTION_SCREEN = -1002;
   };
 }
 
-RCT_EXPORT_MODULE()
+RCT_EXPORT_MODULE();
 
 - (NSArray<NSString *> *)supportedEvents {
   return @[@"CaptureProtectionListener"];
@@ -65,11 +65,11 @@ RCT_EXPORT_MODULE()
   NSLog(@"[CaptureProtection] Call recordEventWithStatus %d", isCaptured == true);
   if (isCaptured) {
     [self createRecordProtectionScreen];
-    [self.bridge.eventDispatcher sendAppEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_DETECTED_START)}];
+    [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_DETECTED_START)}];
   } else {
     [self removeRecordProtectionScreen];
     if (init != TRUE) {
-      [self.bridge.eventDispatcher sendAppEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_DETECTED_END)}];
+      [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_DETECTED_END)}];
     }
   }
 }
@@ -81,7 +81,7 @@ RCT_REMAP_METHOD(removeRecordCaptureProtecter,
   @try {
     if (!hasRecordCapturedListener) {
       NSLog(@"[CaptureProtection] Call removeRecordCaptureProtecter but already remove");
-      [self.bridge.eventDispatcher sendAppEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_NOT_EXIST)}];
+      [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_NOT_EXIST)}];
       resolve(@(NO));
     } else {
       NSLog(@"[CaptureProtection] Call removeRecordCaptureProtecter");
@@ -90,7 +90,7 @@ RCT_REMAP_METHOD(removeRecordCaptureProtecter,
         [self removeRecordProtectionScreen];
       });
       hasRecordCapturedListener = NO;
-      [self.bridge.eventDispatcher sendAppEventWithName:@"CaptureProtectionListener" body:@{@"status": @(REMOVE_RECORD_LISTENER)}];
+      [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(REMOVE_RECORD_LISTENER)}];
       resolve(@(TRUE));
     }
   }
@@ -112,7 +112,7 @@ RCT_REMAP_METHOD(addRecordCaptureProtecter,
   @try {
     if (hasRecordCapturedListener) {
       NSLog(@"[CaptureProtection] Call addRecordCaptureProtecter but already init");
-      [self.bridge.eventDispatcher sendAppEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_EXIST)}];
+      [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_EXIST)}];
       resolve(@(NO));
     } else {
       SCREEN_IMAGE = screen;
@@ -121,7 +121,7 @@ RCT_REMAP_METHOD(addRecordCaptureProtecter,
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(recordEventDetected:) name:UIScreenCapturedDidChangeNotification object:nil];
         [self recordEventWithStatus:nil init:YES];
       });
-      [self.bridge.eventDispatcher sendAppEventWithName:@"CaptureProtectionListener" body:@{@"status": @(INIT_RECORD_LISTENER)}];
+      [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(INIT_RECORD_LISTENER)}];
       hasRecordCapturedListener = YES;
       resolve(@(YES));
     }
