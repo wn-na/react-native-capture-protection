@@ -22,7 +22,7 @@ static int TAG_RECORD_PROTECTION_SCREEN = -1002;
 RCT_EXPORT_MODULE();
 
 - (NSArray<NSString *> *)supportedEvents {
-  return @[@"CaptureProtectionListener"];
+    return @[@"CaptureProtectionListener"];
 }
 
 - (NSError *)convertNSError: (NSException *)exception {
@@ -77,7 +77,7 @@ RCT_EXPORT_MODULE();
         [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_DETECTED_START)}];
     } else {
         [self removeRecordProtectionScreen];
-        if (init != TRUE) {
+        if (init != YES) {
             [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_DETECTED_END)}];
         }
     }
@@ -119,7 +119,7 @@ RCT_REMAP_METHOD(stopPreventScreenshot,
     NSLog(@"[CaptureProtection] Call stopPreventScreenshot");
     @try {
         [self preventScreenshot:false];
-        resolve(@(preventCaptureScreen.isSecureTextEntry));
+        resolve(@(!preventCaptureScreen.isSecureTextEntry));
     }
     @catch (NSException *e) {
         reject(@"stopPreventScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]); 
@@ -138,69 +138,69 @@ RCT_REMAP_METHOD(isPreventScreenshot,
 }
 
 RCT_REMAP_METHOD(stopPreventRecording,
-  stopPreventRecordingResolver: (RCTPromiseResolveBlock)resolve
-  stopPreventRecordingRejecter: (RCTPromiseRejectBlock)reject
+    stopPreventRecordingResolver: (RCTPromiseResolveBlock)resolve
+    stopPreventRecordingRejecter: (RCTPromiseRejectBlock)reject
 ) {
-  @try {
-    if (!hasRecordCapturedListener) {
-      NSLog(@"[CaptureProtection] Call stopPreventRecording but already remove");
-      [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_NOT_EXIST)}];
-      resolve(@(NO));
-    } else {
-      NSLog(@"[CaptureProtection] Call stopPreventRecording");
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:UIScreenCapturedDidChangeNotification object:nil];
-        [self removeRecordProtectionScreen];
-      });
-      hasRecordCapturedListener = NO;
-      [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(REMOVE_RECORD_LISTENER)}];
-      resolve(@(TRUE));
+    @try {
+        if (!hasRecordCapturedListener) {
+            NSLog(@"[CaptureProtection] Call stopPreventRecording but already remove");
+            [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_NOT_EXIST)}];
+            resolve(@(NO));
+        } else {
+            NSLog(@"[CaptureProtection] Call stopPreventRecording");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] removeObserver:self name:UIScreenCapturedDidChangeNotification object:nil];
+                [self removeRecordProtectionScreen];
+            });
+            hasRecordCapturedListener = NO;
+            [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(REMOVE_RECORD_LISTENER)}];
+            resolve(@(TRUE));
+        }
     }
-  }
-  @catch (NSException *e) {
-    reject(@"stopPreventRecording", e.reason ?: @"unknown_message", [self convertNSError:e]); 
-  }
+    @catch (NSException *e) {
+        reject(@"stopPreventRecording", e.reason ?: @"unknown_message", [self convertNSError:e]); 
+    }
 };
 
 RCT_REMAP_METHOD(startPreventRecording,
-  screen: (NSString*) screen
-  startPreventRecordingResolver: (RCTPromiseResolveBlock)resolve
-  startPreventRecordingRejecter: (RCTPromiseRejectBlock)reject
+    screen: (NSString*) screen
+    startPreventRecordingResolver: (RCTPromiseResolveBlock)resolve
+    startPreventRecordingRejecter: (RCTPromiseRejectBlock)reject
 ) {
-  @try {
-    if (hasRecordCapturedListener) {
-      NSLog(@"[CaptureProtection] Call startPreventRecording but already init");
-      [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_EXIST)}];
-      resolve(@(NO));
-    } else {
-      SCREEN_IMAGE = screen;
-      NSLog(@"[CaptureProtection] Call startPreventRecording");
-      dispatch_async(dispatch_get_main_queue(), ^{
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(recordEventDetected:) name:UIScreenCapturedDidChangeNotification object:nil];
-        [self recordEventWithStatus:nil init:YES];
-      });
-      [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(INIT_RECORD_LISTENER)}];
-      hasRecordCapturedListener = YES;
-      resolve(@(YES));
+    @try {
+        if (hasRecordCapturedListener) {
+            NSLog(@"[CaptureProtection] Call startPreventRecording but already init");
+            [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_EXIST)}];
+            resolve(@(NO));
+        } else {
+            SCREEN_IMAGE = screen;
+            NSLog(@"[CaptureProtection] Call startPreventRecording");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(recordEventDetected:) name:UIScreenCapturedDidChangeNotification object:nil];
+                [self recordEventWithStatus:nil init:YES];
+            });
+            [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(INIT_RECORD_LISTENER)}];
+            hasRecordCapturedListener = YES;
+            resolve(@(YES));
+        }
     }
-  }
-  @catch (NSException *e) {
-    reject(@"startPreventRecording", e.reason ?: @"unknown_message", [self convertNSError:e]);  
-  }
+    @catch (NSException *e) {
+        reject(@"startPreventRecording", e.reason ?: @"unknown_message", [self convertNSError:e]);  
+    }
 };
 
 RCT_REMAP_METHOD(hasRecordEventListener,
-  hasRecordCapturedListenerResolver: (RCTPromiseResolveBlock)resolve
-  hasRecordCapturedListenerRejector: (RCTPromiseRejectBlock)reject
+    hasRecordCapturedListenerResolver: (RCTPromiseResolveBlock)resolve
+    hasRecordCapturedListenerRejector: (RCTPromiseRejectBlock)reject
 ) {
-  resolve(@(hasRecordCapturedListener));
+    resolve(@(hasRecordCapturedListener));
 }
 
 RCT_REMAP_METHOD(isRecording,
-  isCapturedCapturedResolver: (RCTPromiseResolveBlock)resolve
-  isCapturedCapturedRejector: (RCTPromiseRejectBlock)reject
+    isCapturedCapturedResolver: (RCTPromiseResolveBlock)resolve
+    isCapturedCapturedRejector: (RCTPromiseRejectBlock)reject
 ) {
-  resolve(@([[[UIScreen mainScreen] valueForKey:@"isCaptured"] boolValue]));
+    resolve(@([[[UIScreen mainScreen] valueForKey:@"isCaptured"] boolValue]));
 }
 
 // Don't compile this code when we build for the old architecture.

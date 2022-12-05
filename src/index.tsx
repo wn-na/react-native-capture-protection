@@ -41,9 +41,9 @@ function addRecordEventListener(
 }
 
 /**
- * set `RecordCaptureProtecter`, if already record screen then change protector screen.
+ * set `startPreventRecording`, if already record screen then change protector screen.
  *
- * if already exist `RecordCaptureProtecter` return `false`, otherwise return `true`
+ * if already exist `startPreventRecording` return `false`, otherwise return `true`
  */
 async function startPreventRecording(
   screenName = 'ScreenRecordProtect.png'
@@ -64,9 +64,9 @@ async function startPreventRecording(
 }
 
 /**
- * remove `RecordCaptureProtecter` and protecter screen.
+ * remove `stopPreventRecording` and protecter screen.
  *
- * if any `RecordCaptureProtecter` is not exist, return `false`, otherwise return `true`
+ * if any `stopPreventRecording` is not exist, return `false`, otherwise return `true`
  */
 async function stopPreventRecording(): Promise<boolean> {
   if (Platform.OS !== 'ios') {
@@ -105,12 +105,23 @@ async function hasRecordEventListener(): Promise<boolean> {
   return !!(await CaptureProtectionModule?.hasRecordEventListener?.());
 }
 
+/**
+ * if start prevent screenshot event return `true` else, return `false`
+ */
 async function startPreventScreenshot(): Promise<boolean> {
   return await CaptureProtectionModule?.startPreventScreenshot?.();
 }
+
+/**
+ * if stop prevent screenshot event return `true` else, return `false`
+ */
 async function stopPreventScreenshot(): Promise<boolean> {
   return await CaptureProtectionModule?.stopPreventScreenshot?.();
 }
+
+/**
+ * return is prevent screenshot event
+ */
 async function isPreventScreenshot(): Promise<boolean> {
   return await CaptureProtectionModule?.isPreventScreenshot?.();
 }
@@ -118,24 +129,11 @@ export const CaptureProtection = {
   addRecordEventListener,
   hasRecordEventListener,
   startPreventRecording,
-  stopPreventRecording,
   startPreventScreenshot,
+  stopPreventRecording,
   stopPreventScreenshot,
   isPreventScreenshot,
   isRecording,
 };
 
 export { CaptureProtectionModuleStatus } from './type';
-
-/**
- *
- * addRecordEventListener
- * 화면 녹화 방지 화면 세팅함수
- * startPreventRecording
- * 화면 녹화 방지 화면 제거함수
- * stopPreventRecording
- * 화면 녹화 이벤트 리스너 존재여부
- * hasRecordEventListener
- * 현재 녹화중인지 여부
- * isRecording
- */
