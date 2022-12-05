@@ -1,18 +1,54 @@
 import * as React from 'react';
-
-import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from 'react-native-capture-protection';
+import { StyleSheet, View, Button } from 'react-native';
+import {
+  CaptureProtection,
+  CaptureProtectionModuleStatus,
+} from 'react-native-capture-protection';
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
-
   React.useEffect(() => {
-    multiply(3, 7).then(setResult);
+    CaptureProtection.addRecordEventListener(({ status }) => {
+      console.log(
+        'initCaptureProtectionModuleListener => ',
+        CaptureProtectionModuleStatus[status]
+      );
+    });
   }, []);
 
   return (
     <View style={styles.container}>
-      <Text>Result: {result}</Text>
+      <Button
+        title="event start"
+        onPress={() => {
+          CaptureProtection.startPreventRecording().then((res) =>
+            console.log('addRecordCaptureProtecter', res)
+          );
+        }}
+      />
+      <Button
+        title="test"
+        onPress={() => {
+          CaptureProtection.startPreventScreenshot().then((res) =>
+            console.log('startPreventScreenshot', res)
+          );
+        }}
+      />
+      <Button
+        title="test"
+        onPress={() => {
+          CaptureProtection.stopPreventScreenshot().then((res) =>
+            console.log('stopPreventScreenshot', res)
+          );
+        }}
+      />
+      <Button
+        title="event end"
+        onPress={() => {
+          CaptureProtection.stopPreventRecording().then((res) =>
+            console.log('removeRecordCaptureProtecter', res)
+          );
+        }}
+      />
     </View>
   );
 }
