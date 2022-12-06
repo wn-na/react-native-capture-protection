@@ -4,7 +4,6 @@ import {
   CaptureProtection,
   CaptureProtectionModuleStatus,
 } from 'react-native-capture-protection';
-
 export default function App() {
   React.useEffect(() => {
     CaptureProtection.addRecordEventListener(({ status }) => {
@@ -14,9 +13,22 @@ export default function App() {
       );
     });
   }, []);
-
   return (
     <View style={styles.container}>
+      <Button
+        title="prevent1"
+        onPress={() => {
+          CaptureProtection.setRecordProtectionScreenWithText?.('TEST!');
+        }}
+      />
+      <Button
+        title="prevent2"
+        onPress={() => {
+          CaptureProtection.setRecordProtectionScreenWithImage?.(
+            require('../src/test.png')
+          );
+        }}
+      />
       <Text>Record</Text>
       <Button
         title="prevent"
