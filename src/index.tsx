@@ -1,4 +1,9 @@
-import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
+import {
+  Image,
+  NativeEventEmitter,
+  NativeModules,
+  Platform,
+} from 'react-native';
 import type { CaptureNotificationListenerCallback } from './type';
 const LINKING_ERROR =
   `The package 'react-native-capture-protection' doesn't seem to be linked. Make sure: \n\n` +
@@ -45,16 +50,12 @@ function addRecordEventListener(
  *
  * if already exist `startPreventRecording` return `false`, otherwise return `true`
  */
-async function startPreventRecording(
-  screenName = 'ScreenRecordProtect.png'
-): Promise<boolean> {
+async function startPreventRecording(): Promise<boolean> {
   if (Platform.OS !== 'ios') {
     return Promise.reject(new Error('Only IOS Support startPreventRecording'));
   }
   try {
-    return !!(await CaptureProtectionModule?.startPreventRecording?.(
-      screenName
-    ));
+    return !!(await CaptureProtectionModule?.startPreventRecording?.());
   } catch (e) {
     return Promise.reject(e);
   }
@@ -136,6 +137,39 @@ async function isPreventScreenshot(): Promise<boolean> {
   }
   return !!(await CaptureProtectionModule?.isPreventScreenshot?.());
 }
+
+/**
+ * setting Record Protect Screen with only Text
+ */
+async function setRecordProtectionScreenWithText(
+  text = 'ERROR!!'
+): Promise<boolean> {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error('Only IOS Support setRecordProtectionScreenWithText')
+    );
+  }
+  return !!(await CaptureProtectionModule?.setRecordProtectionScreenWithText?.(
+    text
+  ));
+}
+
+/**
+ * setting Record Protect Screen with only Image
+ */
+async function setRecordProtectionScreenWithImage(
+  image: NodeRequire
+): Promise<boolean> {
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(
+      new Error('Only IOS Support setRecordProtectionScreenWithImage')
+    );
+  }
+  return await CaptureProtectionModule?.setRecordProtectionScreenWithImage?.(
+    Image.resolveAssetSource(image as any)
+  );
+}
+
 export const CaptureProtection = {
   addRecordEventListener,
   hasRecordEventListener,
@@ -145,6 +179,8 @@ export const CaptureProtection = {
   stopPreventScreenshot,
   isPreventScreenshot,
   isRecording,
+  setRecordProtectionScreenWithText,
+  setRecordProtectionScreenWithImage,
 };
 
 export { CaptureProtectionModuleStatus } from './type';
