@@ -11,11 +11,20 @@ npm install react-native-capture-protection
 ## Usage
 
 ```js
-import { multiply } from 'react-native-capture-protection';
+import {
+  CaptureProtection,
+  CaptureProtectionModuleStatus,
+} from 'react-native-capture-protection';
 
 // ...
+CaptureProtection.addRecordEventListener(({ status }) => {
+  if (status == CaptureProtectionModuleStatus.RECORD_DETECTED_START) {
+    Alert.alert('Warning', 'record detected');
+  }
+});
 
-const result = await multiply(3, 7);
+await CaptureProtection.startPreventScreenshot();
+await CaptureProtection.stopPreventScreenshot();
 ```
 
 ## Contributing
