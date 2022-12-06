@@ -49,15 +49,12 @@ async function startPreventRecording(
   screenName = 'ScreenRecordProtect.png'
 ): Promise<boolean> {
   if (Platform.OS !== 'ios') {
-    return Promise.reject(
-      new Error('Only IOS Support startPreventRecording function')
-    );
+    return Promise.reject(new Error('Only IOS Support startPreventRecording'));
   }
   try {
-    const result = await CaptureProtectionModule?.startPreventRecording?.(
+    return !!(await CaptureProtectionModule?.startPreventRecording?.(
       screenName
-    );
-    return !!result;
+    ));
   } catch (e) {
     return Promise.reject(e);
   }
@@ -70,9 +67,7 @@ async function startPreventRecording(
  */
 async function stopPreventRecording(): Promise<boolean> {
   if (Platform.OS !== 'ios') {
-    return Promise.reject(
-      new Error('Only IOS Support stopPreventRecording function')
-    );
+    return Promise.reject(new Error('Only IOS Support stopPreventRecording'));
   }
   try {
     return !!(await CaptureProtectionModule?.stopPreventRecording?.());
@@ -88,7 +83,7 @@ async function stopPreventRecording(): Promise<boolean> {
  */
 async function isRecording(): Promise<boolean> {
   if (Platform.OS !== 'ios') {
-    return Promise.reject(new Error('Only IOS Support isRecording function'));
+    return Promise.reject(new Error('Only IOS Support isRecording'));
   }
   return !!(await CaptureProtectionModule?.isRecording?.());
 }
@@ -98,9 +93,7 @@ async function isRecording(): Promise<boolean> {
  */
 async function hasRecordEventListener(): Promise<boolean> {
   if (Platform.OS !== 'ios') {
-    return Promise.reject(
-      new Error('Only IOS Support hasRecordEventListener function')
-    );
+    return Promise.reject(new Error('Only IOS Support hasRecordEventListener'));
   }
   return !!(await CaptureProtectionModule?.hasRecordEventListener?.());
 }
@@ -109,21 +102,39 @@ async function hasRecordEventListener(): Promise<boolean> {
  * if start prevent screenshot event return `true` else, return `false`
  */
 async function startPreventScreenshot(): Promise<boolean> {
-  return await CaptureProtectionModule?.startPreventScreenshot?.();
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(new Error('Only IOS Support startPreventScreenshot'));
+  }
+  try {
+    return !!(await CaptureProtectionModule?.startPreventScreenshot?.());
+  } catch (e) {
+    return Promise.reject(e);
+  }
 }
 
 /**
  * if stop prevent screenshot event return `true` else, return `false`
  */
 async function stopPreventScreenshot(): Promise<boolean> {
-  return await CaptureProtectionModule?.stopPreventScreenshot?.();
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(new Error('Only IOS Support stopPreventScreenshot'));
+  }
+
+  try {
+    return !!(await CaptureProtectionModule?.stopPreventScreenshot?.());
+  } catch (e) {
+    return Promise.reject(e);
+  }
 }
 
 /**
  * return is prevent screenshot event
  */
 async function isPreventScreenshot(): Promise<boolean> {
-  return await CaptureProtectionModule?.isPreventScreenshot?.();
+  if (Platform.OS !== 'ios') {
+    return Promise.reject(new Error('Only IOS Support isPreventScreenshot'));
+  }
+  return !!(await CaptureProtectionModule?.isPreventScreenshot?.());
 }
 export const CaptureProtection = {
   addRecordEventListener,
