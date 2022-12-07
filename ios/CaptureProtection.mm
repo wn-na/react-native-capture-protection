@@ -128,9 +128,9 @@ RCT_REMAP_METHOD(setRecordProtectionScreenWithImage,
     setRecordProtectionScreenWithImageRejecter: (RCTPromiseRejectBlock)reject
 ) {
     @try {
-        UIImage *image = [RCTConvert UIImage:imageObj];
         NSLog(@"[CaptureProtection] Call setRecordProtectionScreenWithImage");
         dispatch_async(dispatch_get_main_queue(), ^{
+            UIImage *image = [RCTConvert UIImage:imageObj];
             [self createRecordProtectionScreenWithImage:image];
         });
         resolve(@(YES));
