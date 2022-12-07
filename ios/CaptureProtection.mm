@@ -7,6 +7,7 @@ static int TAG_RECORD_PROTECTION_SCREEN = -1002;
 
 @implementation CaptureProtection {
     bool hasRecordCapturedListener;
+    bool hasScreenShotListener;
     UITextField* preventCaptureScreen;
     enum CaptureProtectionStatus {
         INIT_RECORD_LISTENER,
@@ -15,6 +16,7 @@ static int TAG_RECORD_PROTECTION_SCREEN = -1002;
         RECORD_LISTENER_EXIST,
         RECORD_DETECTED_START,
         RECORD_DETECTED_END,
+        CAPTURE_DETECTED
     };
     UIViewController *recordProtecterViewController;
 }
@@ -104,6 +106,10 @@ RCT_EXPORT_MODULE();
     }
 }
 
+- (void)screenshotDetected: (NSNotification *)notification {
+    [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(CAPTURE_DETECTED)}];    
+}
+
 - (void)preventScreenshot: (Boolean)isStart resolve: (RCTPromiseResolveBlock)resolve {
     NSLog(@"[CaptureProtection] Call preventScreenshot with %@", (isStart ? @"YES" : @"NO"));
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -166,6 +172,10 @@ RCT_REMAP_METHOD(startPreventScreenshot,
 ) {
     NSLog(@"[CaptureProtection] Call startPreventScreenshot");
     @try {
+        if (!hasScreenShotListener) {
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(screenshotDetected:) name:UIApplicationUserDidTakeScreenshotNotification object:nil];
+            hasScreenShotListener = YES;
+        }
         [self preventScreenshot:true resolve:resolve];
     }
     @catch (NSException *e) {
@@ -180,6 +190,10 @@ RCT_REMAP_METHOD(stopPreventScreenshot,
     NSLog(@"[CaptureProtection] Call stopPreventScreenshot");
     @try {
         [self preventScreenshot:false resolve:resolve];
+        if (hasScreenShotListener) {
+            [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationUserDidTakeScreenshotNotification object:nil];
+            hasScreenShotListener = NO;
+        }
     }
     @catch (NSException *e) {
         reject(@"stopPreventScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]); 

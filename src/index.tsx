@@ -32,6 +32,10 @@ const CaptureNotificationEmitter = Platform.select({
 
 /**
  * create listener `addRecordEventListener`
+ *
+ * `RECORD_DETECTED_START`, `RECORD_DETECTED_END` status will be call when `startPreventRecording` event call
+ *
+ * `CAPTURE_DETECTED` status will be call when `startPreventCapture` event call
  */
 function addRecordEventListener(
   callback: CaptureNotificationListenerCallback

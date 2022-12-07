@@ -11,6 +11,7 @@ export default function App() {
         'initCaptureProtectionModuleListener => ',
         CaptureProtectionModuleStatus[status]
       );
+      Alert.alert('Info', CaptureProtectionModuleStatus[status]);
     });
   }, []);
   return (
