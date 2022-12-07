@@ -1,11 +1,11 @@
 export enum CaptureProtectionModuleStatus {
-  /** create record listener to use `addRecordCaptureProtecter` */
+  /** @deprecated create record listener to use `addRecordCaptureProtecter` */
   INIT_RECORD_LISTENER,
-  /** remove record listener to use `removeRecordCaptureProtecter` */
+  /** @deprecated remove record listener to use `removeRecordCaptureProtecter` */
   REMOVE_RECORD_LISTENER,
-  /** try to remove listener for `removeRecordCaptureProtecter`, but listener is not exist */
+  /** @deprecated try to remove listener for `removeRecordCaptureProtecter`, but listener is not exist */
   RECORD_LISTENER_NOT_EXIST,
-  /** try to add listener for `addRecordCaptureProtecter`, but listener is already exist */
+  /** @deprecated try to add listener for `addRecordCaptureProtecter`, but listener is already exist */
   RECORD_LISTENER_EXIST,
   /** listener detect `isCaptured` is `true` */
   RECORD_DETECTED_START,
@@ -15,10 +15,9 @@ export enum CaptureProtectionModuleStatus {
   CAPTURE_DETECTED,
 }
 
-export interface CaptureNotificationEmitterCallbackParam {
-  status: CaptureProtectionModuleStatus;
-}
+export type CaptureEventType = 'screenshot' | 'record';
 
-export type CaptureNotificationListenerCallback = (
-  status: CaptureNotificationEmitterCallbackParam
-) => any;
+export type CaptureEventListenerCallback = (status: {
+  status: CaptureProtectionModuleStatus;
+  isPrevent: Record<CaptureEventType, boolean>;
+}) => any;
