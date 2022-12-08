@@ -31,9 +31,9 @@ await CaptureProtection.allowScreenRecord();
 
 More Infomation, please read this
 
-- [method](https://github.com/0xlethe/react-native-capture-protection/wiki/method.md)
-- [type](https://github.com/0xlethe/react-native-capture-protection/wiki/type.md)
-- [migration to v1](https://github.com/0xlethe/react-native-capture-protection/wiki/how-to-migration-v0-to-v1.md)
+- [method](https://github.com/0xlethe/react-native-capture-protection/wiki/method)
+- [type](https://github.com/0xlethe/react-native-capture-protection/wiki/type)
+- [migration to v1](https://github.com/0xlethe/react-native-capture-protection/wiki/how-to-migration-v0-to-v1)
 
 ## Contributing
 
