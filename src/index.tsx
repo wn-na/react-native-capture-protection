@@ -189,6 +189,16 @@ const isScreenRecording = async (): Promise<boolean | undefined> => {
   return await CaptureProtectionModule?.isScreenRecording?.();
 };
 
+/**
+ * return prevent status
+ */
+const getPreventStatus = async (): Promise<CaptureEventStatus | undefined> => {
+  if (Platform.OS !== 'ios') {
+    return;
+  }
+  return await CaptureProtectionModule?.getPreventStatus?.();
+};
+
 export const CaptureProtection = {
   addEventListener,
   setScreenRecordScreenWithText,
@@ -203,6 +213,7 @@ export const CaptureProtection = {
   removeScreenRecordListener,
   hasListener,
   isScreenRecording,
+  getPreventStatus,
 };
 
 export { CaptureProtectionModuleStatus, CaptureEventStatus } from './type';

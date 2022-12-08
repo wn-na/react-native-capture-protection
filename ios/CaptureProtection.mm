@@ -221,6 +221,16 @@ RCT_REMAP_METHOD(hasListener,
     });
 }
 
+RCT_REMAP_METHOD(getPreventStatus,
+    getPreventStatusResolver: (RCTPromiseResolveBlock)resolve
+    getPreventStatusRejector: (RCTPromiseRejectBlock)reject
+) {
+    resolve(@{
+        @"screenshot": @(isPreventScreenshot), 
+        @"record": @(isPreventScreenRecord)
+    });
+}
+
 RCT_REMAP_METHOD(addScreenshotListener,
     addScreenshotListenerResolver: (RCTPromiseResolveBlock)resolve
     addScreenshotListenerRejecter: (RCTPromiseRejectBlock)reject
