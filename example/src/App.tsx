@@ -1,83 +1,58 @@
 import * as React from 'react';
-import { StyleSheet, View, Button, Alert, Text } from 'react-native';
+import { StyleSheet, View, Button } from 'react-native';
 import {
   CaptureProtection,
   CaptureProtectionModuleStatus,
 } from 'react-native-capture-protection';
 export default function App() {
   React.useEffect(() => {
-    CaptureProtection.addRecordEventListener(({ status }) => {
+    CaptureProtection.addEventListener(({ status, isPrevent }) => {
       console.log(
-        'initCaptureProtectionModuleListener => ',
-        CaptureProtectionModuleStatus[status]
+        'CaptureProtection => ',
+        CaptureProtectionModuleStatus[status],
+        isPrevent
       );
-      Alert.alert('Info', CaptureProtectionModuleStatus[status]);
     });
   }, []);
+
   return (
     <View style={styles.container}>
       <Button
-        title="prevent1"
+        title="set Record Protect Screen by Text"
         onPress={() => {
-          CaptureProtection.setRecordProtectionScreenWithText?.('TEST!');
+          CaptureProtection.setScreenRecordScreenWithText?.('TEST!');
         }}
       />
       <Button
-        title="prevent2"
+        title="set Record Protect Screen by Image"
         onPress={() => {
-          CaptureProtection.setRecordProtectionScreenWithImage?.(
+          CaptureProtection.setScreenRecordScreenWithImage?.(
             require('../src/test.png')
           );
         }}
       />
-      <Text>Record</Text>
       <Button
-        title="prevent"
+        title="allow Record"
         onPress={() => {
-          CaptureProtection.startPreventRecording().then((res) => {
-            console.log('startPreventRecording', res);
-            Alert.alert(
-              'startPreventRecording',
-              res ? 'Success' : 'already start'
-            );
-          });
+          CaptureProtection.allowScreenRecord();
         }}
       />
       <Button
-        title="remove"
+        title="prevent Record"
         onPress={() => {
-          CaptureProtection.stopPreventRecording().then((res) => {
-            console.log('stopPreventRecording', res);
-            Alert.alert(
-              'stopPreventRecording',
-              res ? 'Success' : 'already stop'
-            );
-          });
-        }}
-      />
-      <Text>Screenshot</Text>
-      <Button
-        title="prevent"
-        onPress={() => {
-          CaptureProtection.startPreventScreenshot().then((res) => {
-            console.log('startPreventScreenshot', res);
-            Alert.alert(
-              'startPreventScreenshot',
-              res ? 'prevent Success' : 'fail'
-            );
-          });
+          CaptureProtection.preventScreenRecord();
         }}
       />
       <Button
-        title="remove"
+        title="allow Screenshot"
         onPress={() => {
-          CaptureProtection.stopPreventScreenshot().then((res) => {
-            console.log('stopPreventScreenshot', res);
-            Alert.alert(
-              'stopPreventScreenshot',
-              res ? 'remove Success' : 'fail'
-            );
-          });
+          CaptureProtection.allowScreenshot();
+        }}
+      />
+      <Button
+        title="prevent Screenshot"
+        onPress={() => {
+          CaptureProtection.preventScreenshot();
         }}
       />
     </View>
