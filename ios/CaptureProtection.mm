@@ -6,9 +6,10 @@
 static int TAG_RECORD_PROTECTION_SCREEN = -1002;
 
 @implementation CaptureProtection {
-    bool hasRecordCapturedListener;
-    NSString* SCREEN_IMAGE;
-    UITextField* preventCaptureScreen;
+    bool hasScreenRecordObserver;
+    bool hasScreenshotObserver;
+    bool isPreventScreenRecord;
+    bool isPreventScreenshot;
     enum CaptureProtectionStatus {
         INIT_RECORD_LISTENER,
         REMOVE_RECORD_LISTENER,
@@ -16,7 +17,10 @@ static int TAG_RECORD_PROTECTION_SCREEN = -1002;
         RECORD_LISTENER_EXIST,
         RECORD_DETECTED_START,
         RECORD_DETECTED_END,
+        CAPTURE_DETECTED
     };
+    UITextField* secureTextField;
+    UIViewController *protecterViewController;
 }
 
 RCT_EXPORT_MODULE();
@@ -33,175 +37,328 @@ RCT_EXPORT_MODULE();
     }];
 }
 
-- (void)createRecordProtectionScreen {
-    UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-    UIViewController *captureProtectScreenController = (UIViewController *)[[window viewWithTag:TAG_RECORD_PROTECTION_SCREEN] nextResponder];
-    if (captureProtectScreenController == nil) {
-        UIViewController *viewController = [[UIViewController alloc] init];
-        viewController.view.tag = TAG_RECORD_PROTECTION_SCREEN;
-        [viewController.view setBackgroundColor:[UIColor whiteColor]];
-        
-        UIImageView *imageView =  [[UIImageView alloc] initWithImage:[UIImage imageNamed:SCREEN_IMAGE]];
-        imageView.frame = window.frame;
-        imageView.contentMode = UIViewContentModeScaleAspectFit;
-        [viewController.view addSubview:imageView];
-        [viewController.view setBackgroundColor:[UIColor whiteColor]];
-        
-        
-        [window.rootViewController addChildViewController:viewController];
-        [window.rootViewController.view addSubview:viewController.view];
-        [window makeKeyAndVisible];
-        [viewController didMoveToParentViewController:window.rootViewController];
-    }
+- (NSDictionary *)eventMessage: (CaptureProtectionStatus)status {
+    return @{
+        @"status": @(status),
+        @"isPrevent": @{
+            @"screenshot": @(isPreventScreenshot), 
+            @"record": @(isPreventScreenRecord)
+        }
+    };
 }
 
-- (void)removeRecordProtectionScreen {
-    UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-    UIViewController *captureProtectScreenController = (UIViewController *)[[window viewWithTag:TAG_RECORD_PROTECTION_SCREEN] nextResponder];
-    if (captureProtectScreenController != nil) {
-        [captureProtectScreenController willMoveToParentViewController:nil];
-        [captureProtectScreenController.view removeFromSuperview];
-        [captureProtectScreenController removeFromParentViewController];
-    }
+// Observer Event
+- (void)eventScreenshot: (NSNotification *)notification {
+    [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:CAPTURE_DETECTED]];  
 }
 
-- (void)recordEventDetected: (NSNotification *)notification {
-    [self recordEventWithStatus:notification init:NO];
-}
-
-- (void)recordEventWithStatus: (NSNotification *)notification init: (Boolean)init {
-    bool isCaptured = [[[UIScreen mainScreen] valueForKey:@"isCaptured"] boolValue];
-    NSLog(@"[CaptureProtection] Call recordEventWithStatus %d", isCaptured == true);
+- (void)eventScreenRecordWithInit: (NSNotification *)notification init:(BOOL) init {
+    bool isCaptured = [[[UIScreen mainScreen] valueForKey:@"isCaptured"] boolValue]; 
     if (isCaptured) {
-        [self createRecordProtectionScreen];
-        [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_DETECTED_START)}];
+        if (isPreventScreenRecord) {
+            [self createRecordProtectionScreen];
+        }
+        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:RECORD_DETECTED_START]];
     } else {
         [self removeRecordProtectionScreen];
-        if (init != YES) {
-            [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_DETECTED_END)}];
+        if (!init) {
+            [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:RECORD_DETECTED_END]];
         }
     }
 }
 
-- (void)preventScreenshot: (Boolean)isStart resolve: (RCTPromiseResolveBlock)resolve {
-    NSLog(@"[CaptureProtection] Call preventScreenshot with %@", (isStart ? @"YES" : @"NO"));
+- (void)eventScreenRecord: (NSNotification *)notification {
+    [self eventScreenRecordWithInit:notification init:NO];
+}
+
+- (void)setScreenRecordScreenWithImage: (UIImage *)image {
+    UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
+    protecterViewController = [[UIViewController alloc] init];
+    protecterViewController.view.tag = TAG_RECORD_PROTECTION_SCREEN;
+    
+    UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
+    imageView.frame = window.frame;
+    imageView.contentMode = UIViewContentModeScaleAspectFill;
+    [protecterViewController.view addSubview:imageView];
+    [protecterViewController.view setBackgroundColor:[UIColor whiteColor]];
+}
+
+- (void)createRecordProtectionScreenWithText: (NSString *)text {
+    UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
+    protecterViewController = [[UIViewController alloc] init];
+    protecterViewController.view.tag = TAG_RECORD_PROTECTION_SCREEN;
+    [protecterViewController.view setBackgroundColor:[UIColor whiteColor]];
+    
+    UILabel *label = [[UILabel alloc] init];
+    label.textAlignment = NSTextAlignmentCenter;
+    label.textColor = [UIColor blackColor];
+    label.userInteractionEnabled = NO;
+    label.text = text;
+    label.frame = window.frame;
+    [protecterViewController.view addSubview:label];
+}
+
+- (void)createRecordProtectionScreen {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (self->preventCaptureScreen == nil) {
-            self->preventCaptureScreen = [[UITextField alloc] init];
-            self->preventCaptureScreen.userInteractionEnabled = false;
-            UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-            [window addSubview:self->preventCaptureScreen];
-            [window.layer.superlayer addSublayer:self->preventCaptureScreen.layer];
-            [self->preventCaptureScreen.layer.sublayers.firstObject addSublayer:window.layer];
+        UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
+        UIViewController *captureProtectScreenController = (UIViewController *)[[window viewWithTag:TAG_RECORD_PROTECTION_SCREEN] nextResponder];
+        if (captureProtectScreenController == nil) {
+            if(self->protecterViewController == nil) {
+                [self createRecordProtectionScreenWithText:@"record Detected"];
+            }
+            
+            [window.rootViewController addChildViewController:self->protecterViewController];
+            [window.rootViewController.view addSubview:self->protecterViewController.view];
+            [window makeKeyAndVisible];
+            [self->protecterViewController didMoveToParentViewController:window.rootViewController];
         }
-        [self->preventCaptureScreen setSecureTextEntry:isStart];
-        resolve(@(isStart ? self->preventCaptureScreen.isSecureTextEntry : !self->preventCaptureScreen.isSecureTextEntry));
     });
 }
 
-RCT_REMAP_METHOD(startPreventScreenshot,
-    startPreventScreenshotResolver: (RCTPromiseResolveBlock)resolve
-    startPreventScreenshotRejecter: (RCTPromiseRejectBlock)reject
-) {
-    NSLog(@"[CaptureProtection] Call startPreventScreenshot");
-    @try {
-        [self preventScreenshot:true resolve:resolve];
-    }
-    @catch (NSException *e) {
-        reject(@"startPreventScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]);
-    }
-};
+- (void)removeRecordProtectionScreen {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
+        UIViewController *captureProtectScreenController = (UIViewController *)[[window viewWithTag:TAG_RECORD_PROTECTION_SCREEN] nextResponder];
+        if (captureProtectScreenController != nil) {
+            [captureProtectScreenController willMoveToParentViewController:nil];
+            [captureProtectScreenController.view removeFromSuperview];
+            [captureProtectScreenController removeFromParentViewController];
+        }
+    });
+}
 
-RCT_REMAP_METHOD(stopPreventScreenshot,
-    stopPreventScreenshotResolver: (RCTPromiseResolveBlock)resolve
-    stopPreventScreenshotRejecter: (RCTPromiseRejectBlock)reject
-) {
-    NSLog(@"[CaptureProtection] Call stopPreventScreenshot");
-    @try {
-        [self preventScreenshot:false resolve:resolve];
-    }
-    @catch (NSException *e) {
-        reject(@"stopPreventScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]); 
-    }
-};
+- (void)secureScreenshotView: (BOOL)isSecure  { 
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self->secureTextField == nil) {
+            self->secureTextField = [[UITextField alloc] init];
+            self->secureTextField.userInteractionEnabled = false;
+            UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
+            [window addSubview:self->secureTextField];
+            [window.layer.superlayer addSublayer:self->secureTextField.layer];
+            [self->secureTextField.layer.sublayers.firstObject addSublayer:window.layer];
+        }
+        [self->secureTextField setSecureTextEntry:isSecure];
+    });
+}
 
-RCT_REMAP_METHOD(isPreventScreenshot,
-    isPreventScreenshotResolver: (RCTPromiseResolveBlock)resolve
-    isPreventScreenshotRejector: (RCTPromiseRejectBlock)reject
-) {
-    if (preventCaptureScreen != nil) {
-        resolve(@(preventCaptureScreen.isSecureTextEntry));
-    } else {
-        resolve(@(NO));
+- (void) addScreenShotObserver {
+    if (!hasScreenshotObserver) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventScreenshot:) name:UIApplicationUserDidTakeScreenshotNotification object:nil];
+        hasScreenshotObserver = YES;
     }
 }
 
-RCT_REMAP_METHOD(stopPreventRecording,
-    stopPreventRecordingResolver: (RCTPromiseResolveBlock)resolve
-    stopPreventRecordingRejecter: (RCTPromiseRejectBlock)reject
-) {
-    @try {
-        if (!hasRecordCapturedListener) {
-            NSLog(@"[CaptureProtection] Call stopPreventRecording but already remove");
-            [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_NOT_EXIST)}];
-            resolve(@(NO));
-        } else {
-            NSLog(@"[CaptureProtection] Call stopPreventRecording");
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [[NSNotificationCenter defaultCenter] removeObserver:self name:UIScreenCapturedDidChangeNotification object:nil];
-                [self removeRecordProtectionScreen];
-            });
-            hasRecordCapturedListener = NO;
-            [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(REMOVE_RECORD_LISTENER)}];
-            resolve(@(TRUE));
-        }
+- (void) removeScreenShotObserver {
+    if (hasScreenshotObserver) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationUserDidTakeScreenshotNotification object:nil];
+        hasScreenshotObserver = NO;
     }
-    @catch (NSException *e) {
-        reject(@"stopPreventRecording", e.reason ?: @"unknown_message", [self convertNSError:e]); 
-    }
-};
-
-RCT_REMAP_METHOD(startPreventRecording,
-    screen: (NSString*) screen
-    startPreventRecordingResolver: (RCTPromiseResolveBlock)resolve
-    startPreventRecordingRejecter: (RCTPromiseRejectBlock)reject
-) {
-    @try {
-        if (hasRecordCapturedListener) {
-            NSLog(@"[CaptureProtection] Call startPreventRecording but already init");
-            [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(RECORD_LISTENER_EXIST)}];
-            resolve(@(NO));
-        } else {
-            SCREEN_IMAGE = screen;
-            NSLog(@"[CaptureProtection] Call startPreventRecording");
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(recordEventDetected:) name:UIScreenCapturedDidChangeNotification object:nil];
-                [self recordEventWithStatus:nil init:YES];
-            });
-            [self sendEventWithName:@"CaptureProtectionListener" body:@{@"status": @(INIT_RECORD_LISTENER)}];
-            hasRecordCapturedListener = YES;
-            resolve(@(YES));
-        }
-    }
-    @catch (NSException *e) {
-        reject(@"startPreventRecording", e.reason ?: @"unknown_message", [self convertNSError:e]);  
-    }
-};
-
-RCT_REMAP_METHOD(hasRecordEventListener,
-    hasRecordCapturedListenerResolver: (RCTPromiseResolveBlock)resolve
-    hasRecordCapturedListenerRejector: (RCTPromiseRejectBlock)reject
-) {
-    resolve(@(hasRecordCapturedListener));
 }
 
-RCT_REMAP_METHOD(isRecording,
-    isCapturedCapturedResolver: (RCTPromiseResolveBlock)resolve
-    isCapturedCapturedRejector: (RCTPromiseRejectBlock)reject
+- (void) addScreenRecordObserver { 
+    if (!hasScreenRecordObserver) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventScreenRecord:) name:UIScreenCapturedDidChangeNotification object:nil];
+        hasScreenRecordObserver = YES;
+    }
+}
+
+- (void) removeScreenRecordObserver { 
+    if (hasScreenRecordObserver) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:UIScreenCapturedDidChangeNotification object:nil];
+        hasScreenRecordObserver = NO;
+    }
+}
+
+RCT_REMAP_METHOD(setScreenRecordScreenWithImage,
+    screenImage: (NSDictionary*) screenImage
+    setScreenRecordScreenWithImageResolver: (RCTPromiseResolveBlock)resolve
+    setScreenRecordScreenWithImageRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call setScreenRecordScreenWithImage");
+    @try {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UIImage *image = [RCTConvert UIImage:screenImage];
+	        [self setScreenRecordScreenWithImage:image];
+        });
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"setScreenRecordScreenWithImage", e.reason ?: @"unknown_message", [self convertNSError:e]);
+    }
+};
+
+RCT_REMAP_METHOD(setScreenRecordScreenWithText,
+    screenText: (NSString *)screenText
+    setScreenRecordScreenWithTextResolvers: (RCTPromiseResolveBlock)resolve
+    setScreenRecordScreenWithTextRejecters: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call setScreenRecordScreenWithText");
+    @try {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self createRecordProtectionScreenWithText:screenText];
+        });
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"setScreenRecordScreenWithText", e.reason ?: @"unknown_message", [self convertNSError:e]);
+    }
+};
+
+RCT_REMAP_METHOD(isScreenRecording,
+    isScreenRecordingResolver: (RCTPromiseResolveBlock)resolve
+    isScreenRecordingRejector: (RCTPromiseRejectBlock)reject
 ) {
     resolve(@([[[UIScreen mainScreen] valueForKey:@"isCaptured"] boolValue]));
 }
 
+RCT_REMAP_METHOD(hasListener,
+    hasListenerResolver: (RCTPromiseResolveBlock)resolve
+    hasListenerRejector: (RCTPromiseRejectBlock)reject
+) {
+    resolve(@{
+        @"screenshot": @(hasScreenshotObserver), 
+        @"record": @(hasScreenRecordObserver)
+    });
+}
+
+RCT_REMAP_METHOD(getPreventStatus,
+    getPreventStatusResolver: (RCTPromiseResolveBlock)resolve
+    getPreventStatusRejector: (RCTPromiseRejectBlock)reject
+) {
+    resolve(@{
+        @"screenshot": @(isPreventScreenshot), 
+        @"record": @(isPreventScreenRecord)
+    });
+}
+
+RCT_REMAP_METHOD(addScreenshotListener,
+    addScreenshotListenerResolver: (RCTPromiseResolveBlock)resolve
+    addScreenshotListenerRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call addScreenshotListener");
+    @try {
+        [self addScreenShotObserver];
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"addScreenshotListener", e.reason ?: @"unknown_message", [self convertNSError:e]);
+    }
+};
+
+RCT_REMAP_METHOD(removeScreenshotListener,
+    removeScreenshotListenerResolver: (RCTPromiseResolveBlock)resolve
+    removeScreenshotListenerRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call removeScreenshotListener");
+    @try { 
+        [self removeScreenShotObserver];
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"removeScreenshotListener", e.reason ?: @"unknown_message", [self convertNSError:e]); 
+    }
+};
+
+RCT_REMAP_METHOD(addScreenRecordListener,
+    addScreenRecordListenerResolver: (RCTPromiseResolveBlock)resolve
+    addScreenRecordListenerRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call addScreenRecordListener");
+    @try {
+        [self addScreenRecordObserver];
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"addScreenRecordListener", e.reason ?: @"unknown_message", [self convertNSError:e]);
+    }
+};
+
+RCT_REMAP_METHOD(removeScreenRecordListener,
+    removeScreenRecordListenerResolver: (RCTPromiseResolveBlock)resolve
+    removeScreenRecordListenerRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call removeScreenRecordListener");
+    @try {
+        [self removeScreenRecordObserver];
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"removeScreenRecordListener", e.reason ?: @"unknown_message", [self convertNSError:e]); 
+    }
+};
+
+RCT_REMAP_METHOD(allowScreenshot,
+    removeScreenshotListener: (BOOL)removeScreenshotListener
+    allowScreenshotResolver: (RCTPromiseResolveBlock)resolve
+    allowScreenshotRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call allowScreenshot");
+    @try {
+        [self secureScreenshotView:false];
+        if (removeScreenshotListener) {
+            [self removeScreenShotObserver];
+        }
+        isPreventScreenshot = NO;
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"allowScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]);
+    }
+};
+
+RCT_REMAP_METHOD(preventScreenshot,
+    preventScreenshotResolver: (RCTPromiseResolveBlock)resolve
+    preventScreenshotRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call preventScreenshot");
+    @try { 
+        [self secureScreenshotView:true];
+        [self addScreenShotObserver];
+        isPreventScreenshot = YES;
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"preventScreenshot", e.reason ?: @"unknown_message", [self convertNSError:e]); 
+    }
+};
+
+RCT_REMAP_METHOD(allowScreenRecord,
+    removeScreenRecordListener: (BOOL)removeScreenRecordListener
+    allowScreenRecordResolver: (RCTPromiseResolveBlock)resolve
+    allowScreenRecordRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call allowScreenRecord");
+    @try {
+        [self removeRecordProtectionScreen];
+        if (removeScreenRecordListener) {
+            [self removeScreenRecordObserver];
+        }
+        isPreventScreenRecord = NO;
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"allowScreenRecord", e.reason ?: @"unknown_message", [self convertNSError:e]);
+    }
+};
+
+RCT_REMAP_METHOD(preventScreenRecord,
+    isImmediate: (BOOL)isImmediate
+    preventScreenRecordResolver: (RCTPromiseResolveBlock)resolve
+    preventScreenRecordRejecter: (RCTPromiseRejectBlock)reject
+) {
+    NSLog(@"[CaptureProtection] Call preventScreenRecord");
+    @try { 
+        [self addScreenRecordObserver];
+        isPreventScreenRecord = YES;
+        if (isImmediate) {
+            [self eventScreenRecordWithInit:nil init:true];
+        }
+        resolve(@(YES));
+    }
+    @catch (NSException *e) {
+        reject(@"preventScreenRecord", e.reason ?: @"unknown_message", [self convertNSError:e]); 
+    }
+};
 // Don't compile this code when we build for the old architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
