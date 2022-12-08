@@ -19,5 +19,7 @@ export type CaptureEventType = 'screenshot' | 'record';
 
 export type CaptureEventListenerCallback = (status: {
   status: CaptureProtectionModuleStatus;
-  isPrevent: Record<CaptureEventType, boolean>;
+  isPrevent: CaptureEventStatus;
 }) => any;
+
+export type CaptureEventStatus = Record<CaptureEventType, boolean>;
