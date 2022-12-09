@@ -8,6 +8,12 @@ simple control capture event (like screenshot, screen record) in iOS Native
 npm install react-native-capture-protection
 ```
 
+## Preview
+
+### prevent, allow screenshot in iOS
+![Simulator Screen Recording - iPhone 14 - 2022-12-09 at 16 02 15](https://user-images.githubusercontent.com/37437842/206644553-e4c3f2bc-b624-47ac-a005-132199e049b2.gif)
+
+
 ## Usage
 
 ```js
