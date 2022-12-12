@@ -11,26 +11,26 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-const CaptureProtectionModule = Platform.select({
-  ios: NativeModules.CaptureProtection
-    ? NativeModules.CaptureProtection
-    : new Proxy(
-        {},
-        {
-          get() {
-            throw new Error(LINKING_ERROR);
-          },
-        }
-      ),
-  default: undefined,
-});
+const CaptureProtectionModule = NativeModules.CaptureProtection
+  ? NativeModules.CaptureProtection
+  : new Proxy(
+      {},
+      {
+        get() {
+          throw new Error(LINKING_ERROR);
+        },
+      }
+    );
 
-const CaptureNotificationEmitter = Platform.select({
-  ios: new NativeEventEmitter(CaptureProtectionModule),
-  default: undefined,
-});
+const CaptureNotificationEmitter =
+  Platform.OS === 'ios'
+    ? new NativeEventEmitter(CaptureProtectionModule)
+    : undefined;
 
 /**
+ *
+ *  **This function only work in `iOS`**
+ *
  * create listener `addRecordEventListener`
  *
  * `RECORD_DETECTED_START`, `RECORD_DETECTED_END`, `CAPTURE_DETECTED` status return with event listener be registered
@@ -48,6 +48,8 @@ function addEventListener(callback: CaptureEventListenerCallback): void {
 }
 
 /**
+ *  **This function only work in `iOS`**
+ *
  * setting Record Protect Screen with only Text
  */
 const setScreenRecordScreenWithText = async (
@@ -62,6 +64,8 @@ const setScreenRecordScreenWithText = async (
 };
 
 /**
+ *  **This function only work in `iOS`**
+ *
  * setting Record Protect Screen with only Image
  */
 const setScreenRecordScreenWithImage = async (
@@ -81,10 +85,13 @@ const setScreenRecordScreenWithImage = async (
  * - if `removeListener` is `true`, listener will be removed else listener is alive, default is `false`
  */
 const allowScreenRecord = async (removeListener = false): Promise<void> => {
-  if (Platform.OS !== 'ios') {
-    return;
+  if (Platform.OS === 'android') {
+    return await CaptureProtectionModule?.allowScreenshot?.();
   }
-  return await CaptureProtectionModule?.allowScreenRecord?.(removeListener);
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.allowScreenRecord?.(removeListener);
+  }
+  return undefined;
 };
 
 /**
@@ -95,10 +102,13 @@ const allowScreenRecord = async (removeListener = false): Promise<void> => {
  * if `isImmediate` is `true`, screen is already recording, change immediate, default is `false`
  */
 const preventScreenRecord = async (isImmediate = false): Promise<void> => {
-  if (Platform.OS !== 'ios') {
-    return;
+  if (Platform.OS === 'android') {
+    return await CaptureProtectionModule?.preventScreenshot?.();
   }
-  return await CaptureProtectionModule?.preventScreenRecord?.(isImmediate);
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.preventScreenRecord?.(isImmediate);
+  }
+  return undefined;
 };
 
 /**
@@ -107,10 +117,13 @@ const preventScreenRecord = async (isImmediate = false): Promise<void> => {
  * - if `removeListener` is `true`, listener will be removed else listener is alive, default is `false`
  */
 const allowScreenshot = async (removeListener = false): Promise<void> => {
-  if (Platform.OS !== 'ios') {
-    return;
+  if (Platform.OS === 'android') {
+    return await CaptureProtectionModule?.allowScreenshot?.();
   }
-  return await CaptureProtectionModule?.allowScreenshot?.(removeListener);
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.allowScreenshot?.(removeListener);
+  }
+  return undefined;
 };
 
 /**
@@ -119,13 +132,18 @@ const allowScreenshot = async (removeListener = false): Promise<void> => {
  * if user take screenshot, screenshot image will be black screen
  */
 const preventScreenshot = async (): Promise<void> => {
-  if (Platform.OS !== 'ios') {
-    return;
+  if (Platform.OS === 'android') {
+    return await CaptureProtectionModule?.preventScreenshot?.();
   }
-  return await CaptureProtectionModule?.preventScreenshot?.();
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.preventScreenshot?.();
+  }
+  return undefined;
 };
 
 /**
+ *  **This function only work in `iOS`**
+ *
  *  add only screen record event listener
  */
 const addScreenRecordListener = async (): Promise<void> => {
@@ -136,6 +154,8 @@ const addScreenRecordListener = async (): Promise<void> => {
 };
 
 /**
+ *  **This function only work in `iOS`**
+ *
  *  remove only screen record event listener
  */
 const removeScreenRecordListener = async (): Promise<void> => {
@@ -146,6 +166,8 @@ const removeScreenRecordListener = async (): Promise<void> => {
 };
 
 /**
+ *  **This function only work in `iOS`**
+ *
  *  add only screenshot event listener
  */
 const addScreenshotListener = async (): Promise<void> => {
@@ -156,6 +178,8 @@ const addScreenshotListener = async (): Promise<void> => {
 };
 
 /**
+ *  **This function only work in `iOS`**
+ *
  *  remove only screenshot event listener
  *
  *  this function didnt remove prevent screenshot event
@@ -169,7 +193,10 @@ const removeScreenshotListener = async (): Promise<void> => {
   return await CaptureProtectionModule?.removeScreenshotListener?.();
 };
 
-/** return listener regist status */
+/**
+ *  **This function only work in `iOS`**
+ *
+ * return listener regist status */
 const hasListener = async (): Promise<CaptureEventStatus | undefined> => {
   if (Platform.OS !== 'ios') {
     return;
@@ -178,6 +205,8 @@ const hasListener = async (): Promise<CaptureEventStatus | undefined> => {
 };
 
 /**
+ *  **This function only work in `iOS`**
+ *
  * return UIScreen value of `isCaptured`
  *
  * more information, visit `https://developer.apple.com/documentation/uikit/uiscreen/2921651-captured`
@@ -193,10 +222,13 @@ const isScreenRecording = async (): Promise<boolean | undefined> => {
  * return prevent status
  */
 const getPreventStatus = async (): Promise<CaptureEventStatus | undefined> => {
-  if (Platform.OS !== 'ios') {
-    return;
+  if (Platform.OS === 'android') {
+    return await CaptureProtectionModule?.getPreventStatus?.();
   }
-  return await CaptureProtectionModule?.getPreventStatus?.();
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.getPreventStatus?.();
+  }
+  return undefined;
 };
 
 export const CaptureProtection = {
