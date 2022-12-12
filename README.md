@@ -1,6 +1,6 @@
 # react-native-capture-protection
 
-simple control capture event (like screenshot, screen record) in iOS Native
+simple control capture event (like screenshot, screen record) in Android, iOS Native
 
 ## Installation
 
