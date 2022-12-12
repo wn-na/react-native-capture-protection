@@ -18,7 +18,6 @@ import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
 public class CaptureProtectionModule extends ReactContextBaseJavaModule {
   public static final String NAME = "CaptureProtection";
   private final ReactApplicationContext reactContext;
-  private static boolean isSecureFlag = false;
 
   public CaptureProtectionModule(ReactApplicationContext reactContext) {
     super(reactContext);
@@ -38,7 +37,6 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
       public void run() {
         try {
           reactContext.getCurrentActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
-          isSecureFlag = true;
           promise.resolve(true);
         } catch(Exception e) {
           promise.reject("preventScreenshot", e);
@@ -54,7 +52,6 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
       public void run() {
         try {
           reactContext.getCurrentActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
-          isSecureFlag = false;
           promise.resolve(true);
         } catch (Exception e) {
           promise.reject("allowScreenshot", e);
@@ -65,9 +62,19 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void getPreventStatus(Promise promise) {
-    WritableMap statusMap = Arguments.createMap();
-    statusMap.putBoolean("screenshot", isSecureFlag); 
-    statusMap.putBoolean("record", isSecureFlag); 
-    promise.resolve(statusMap);
+    runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          boolean flags = (reactContext.getCurrentActivity().getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_SECURE) != 0;
+          WritableMap statusMap = Arguments.createMap();
+          statusMap.putBoolean("screenshot", flags); 
+          statusMap.putBoolean("record", flags); 
+          promise.resolve(statusMap);
+        } catch (Exception e) {
+          promise.reject("getPreventStatus", e);
+        }
+      }
+    });
   }
 }
