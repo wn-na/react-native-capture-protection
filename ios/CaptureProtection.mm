@@ -135,7 +135,9 @@ RCT_EXPORT_MODULE();
             UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
             [window addSubview:self->secureTextField];
             [window.layer.superlayer addSublayer:self->secureTextField.layer];
-            [self->secureTextField.layer.sublayers.firstObject addSublayer:window.layer];
+            if (self->secureTextField.layer.sublayers.firstObject != nil) {
+                [self->secureTextField.layer.sublayers.firstObject addSublayer:window.layer];
+            }
         }
         [self->secureTextField setSecureTextEntry:isSecure];
     });
