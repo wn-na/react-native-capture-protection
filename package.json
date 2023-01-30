@@ -1,7 +1,7 @@
 {
   "name": "react-native-capture-protection",
-  "version": "1.1.0",
-  "description": "react-native control screenshot, screen record event",
+  "version": "1.2.0",
+  "description": "It’s a library for React Native to control simple capture events(i.e. Screenshot or Screen record)",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
