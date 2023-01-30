@@ -133,7 +133,6 @@ RCT_EXPORT_MODULE();
             self->secureTextField = [[UITextField alloc] init];
             self->secureTextField.userInteractionEnabled = false;
             UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-            [window addSubview:self->secureTextField];
             [window.layer.superlayer addSublayer:self->secureTextField.layer];
             if (self->secureTextField.layer.sublayers.firstObject != nil) {
                 [self->secureTextField.layer.sublayers.firstObject addSublayer:window.layer];
