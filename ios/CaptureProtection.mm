@@ -127,16 +127,27 @@ RCT_EXPORT_MODULE();
     });
 }
 
+- (UIViewController*) getRootPresentViewController {
+    UIViewController *viewController = [UIApplication sharedApplication].keyWindow.rootViewController;
+    while (viewController.presentedViewController) {
+      viewController = viewController.presentedViewController;
+    }
+    return viewController;
+}
+
 - (void)secureScreenshotView: (BOOL)isSecure  { 
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self->secureTextField == nil) {
             self->secureTextField = [[UITextField alloc] init];
             self->secureTextField.userInteractionEnabled = false;
-            UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-            [window.layer.superlayer addSublayer:self->secureTextField.layer];
-            if (self->secureTextField.layer.sublayers.firstObject != nil) {
-                [self->secureTextField.layer.sublayers.firstObject addSublayer:window.layer];
-            }
+            UIViewController * rootViewController = [self getRootPresentViewController];
+            UIWindow *window = [UIApplication sharedApplication].keyWindow;
+            [rootViewController.view addSubview: self->secureTextField];
+            [window makeKeyAndVisible];
+            
+            [window.layer.superlayer addSublayer:self->secureTextField.layer]; 
+            [self->secureTextField.layer.sublayers.firstObject addSublayer:window.layer];
+ 
         }
         [self->secureTextField setSecureTextEntry:isSecure];
     });
