@@ -13,6 +13,7 @@ export enum CaptureProtectionModuleStatus {
   RECORD_DETECTED_END,
   /** when `UIApplicationUserDidTakeScreenshotNotification` observer called  */
   CAPTURE_DETECTED,
+  UNKNOWN,
 }
 
 export type CaptureEventType = 'screenshot' | 'record';

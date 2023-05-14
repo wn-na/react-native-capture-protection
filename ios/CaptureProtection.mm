@@ -17,7 +17,8 @@ static int TAG_RECORD_PROTECTION_SCREEN = -1002;
         RECORD_LISTENER_EXIST,
         RECORD_DETECTED_START,
         RECORD_DETECTED_END,
-        CAPTURE_DETECTED
+        CAPTURE_DETECTED,
+        UNKNOWN
     };
     UITextField* secureTextField;
     UIViewController *protecterViewController;
@@ -311,6 +312,7 @@ RCT_REMAP_METHOD(allowScreenshot,
             [self removeScreenShotObserver];
         }
         isPreventScreenshot = NO;
+        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
         resolve(@(YES));
     }
     @catch (NSException *e) {
@@ -327,6 +329,7 @@ RCT_REMAP_METHOD(preventScreenshot,
         [self secureScreenshotView:true];
         [self addScreenShotObserver];
         isPreventScreenshot = YES;
+        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
         resolve(@(YES));
     }
     @catch (NSException *e) {
@@ -346,6 +349,7 @@ RCT_REMAP_METHOD(allowScreenRecord,
             [self removeScreenRecordObserver];
         }
         isPreventScreenRecord = NO;
+        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
         resolve(@(YES));
     }
     @catch (NSException *e) {
@@ -365,6 +369,7 @@ RCT_REMAP_METHOD(preventScreenRecord,
         if (isImmediate) {
             [self eventScreenRecordWithInit:nil init:true];
         }
+        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
         resolve(@(YES));
     }
     @catch (NSException *e) {

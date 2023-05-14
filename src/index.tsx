@@ -4,7 +4,13 @@ import {
   NativeModules,
   Platform,
 } from 'react-native';
-import type { CaptureEventListenerCallback, CaptureEventStatus } from './type';
+import {
+  CaptureEventListenerCallback,
+  CaptureEventStatus,
+  CaptureProtectionModuleStatus,
+} from './type';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+
 const LINKING_ERROR =
   `The package 'react-native-capture-protection' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
@@ -231,6 +237,96 @@ const getPreventStatus = async (): Promise<CaptureEventStatus | undefined> => {
   return undefined;
 };
 
+/**
+ *
+ *
+ */
+export const useCaptureProtectionFunction = () => {
+  const [status, setStatus] = useState<CaptureProtectionModuleStatus>();
+  const [isPrevent, setPrevent] = useState<CaptureEventStatus>();
+  useEffect(() => {
+    hasListener().then((listener) => {
+      if (!listener?.record && !listener?.screenshot) {
+        addScreenRecordListener();
+        addScreenshotListener();
+      }
+    });
+
+    addEventListener((callback) => {
+      setPrevent(callback.isPrevent);
+      setStatus(
+        callback.status === CaptureProtectionModuleStatus.UNKNOWN
+          ? undefined
+          : callback.status
+      );
+      if (callback.status === CaptureProtectionModuleStatus.CAPTURE_DETECTED) {
+        setTimeout(() => setStatus(undefined), 100);
+      }
+    });
+  }, []);
+
+  return {
+    isPrevent,
+    status,
+    allowScreenshot,
+    preventScreenshot,
+    allowScreenRecord,
+    preventScreenRecord,
+  };
+};
+
+const CaptureProtectionContext = createContext<{
+  isPrevent: CaptureEventStatus | undefined;
+  status: CaptureProtectionModuleStatus | undefined;
+}>({
+  isPrevent: undefined,
+  status: undefined,
+});
+
+export const CaptureProtectionProvider = ({ children }: any) => {
+  const [status, setStatus] = useState<CaptureProtectionModuleStatus>();
+  const [isPrevent, setPrevent] = useState<CaptureEventStatus>();
+
+  useEffect(() => {
+    addScreenRecordListener();
+    addScreenshotListener();
+
+    getPreventStatus().then((prevent) => {
+      setPrevent(prevent);
+    });
+
+    isScreenRecording().then((recording) => {
+      if (recording)
+        setStatus(CaptureProtectionModuleStatus.RECORD_DETECTED_START);
+    });
+
+    addEventListener((callback) => {
+      setPrevent({ ...callback.isPrevent });
+      setStatus(
+        callback.status === CaptureProtectionModuleStatus.UNKNOWN
+          ? undefined
+          : callback.status
+      );
+      if (callback.status === CaptureProtectionModuleStatus.CAPTURE_DETECTED) {
+        setTimeout(() => setStatus(undefined), 100);
+      }
+    });
+    return () => {
+      CaptureNotificationEmitter?.removeAllListeners(
+        'CaptureProtectionListener'
+      );
+    };
+  }, []);
+
+  return (
+    <CaptureProtectionContext.Provider value={{ isPrevent, status }}>
+      <>{children}</>
+    </CaptureProtectionContext.Provider>
+  );
+};
+
+export const useCaptureProtection = () => useContext(CaptureProtectionContext);
+
 export const CaptureProtection = {
   addEventListener,
   setScreenRecordScreenWithText,
@@ -239,13 +335,29 @@ export const CaptureProtection = {
   preventScreenshot,
   allowScreenRecord,
   preventScreenRecord,
+  /**
+   * @deprecated
+   */
   addScreenshotListener,
+  /**
+   * @deprecated
+   */
   removeScreenshotListener,
+  /**
+   * @deprecated
+   */
   addScreenRecordListener,
+  /**
+   * @deprecated
+   */
   removeScreenRecordListener,
+  /**
+   * @deprecated
+   */
   hasListener,
   isScreenRecording,
   getPreventStatus,
+  useCaptureProtection: useCaptureProtectionFunction,
 };
 
 export { CaptureProtectionModuleStatus, CaptureEventStatus } from './type';
