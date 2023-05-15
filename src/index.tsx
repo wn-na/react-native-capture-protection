@@ -9,7 +9,13 @@ import {
   CaptureEventStatus,
   CaptureProtectionModuleStatus,
 } from './type';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 const LINKING_ERROR =
   `The package 'react-native-capture-protection' doesn't seem to be linked. Make sure: \n\n` +
@@ -237,10 +243,6 @@ const getPreventStatus = async (): Promise<CaptureEventStatus | undefined> => {
   return undefined;
 };
 
-/**
- *
- *
- */
 export const useCaptureProtectionFunction = () => {
   const [status, setStatus] = useState<CaptureProtectionModuleStatus>();
   const [isPrevent, setPrevent] = useState<CaptureEventStatus>();
@@ -260,32 +262,74 @@ export const useCaptureProtectionFunction = () => {
           : callback.status
       );
       if (callback.status === CaptureProtectionModuleStatus.CAPTURE_DETECTED) {
-        setTimeout(() => setStatus(undefined), 100);
+        setTimeout(() => setStatus(undefined), 1000);
       }
     });
   }, []);
 
+  const allowScreenshotFunc = () => allowScreenshot();
+  const allowScreenRecordFunc = () => allowScreenRecord();
+
   return {
     isPrevent,
+    /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED` to unknown in `1000ms` */
     status,
-    allowScreenshot,
+    allowScreenshot: allowScreenshotFunc,
     preventScreenshot,
-    allowScreenRecord,
+    allowScreenRecord: allowScreenRecordFunc,
     preventScreenRecord,
   };
 };
 
+/**
+ * Capture Protection Context API
+ *
+ * use hook `useCaptureProtection`
+ *
+ */
 const CaptureProtectionContext = createContext<{
   isPrevent: CaptureEventStatus | undefined;
+  /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED` to unknown in `1000ms` */
   status: CaptureProtectionModuleStatus | undefined;
+  /** prevent all capture, record event */
+  bindProtection: () => Promise<void>;
+  /** if use `rollback`, status will change before use `bindProtection` */
+  releaseProtection: (rollback?: boolean) => Promise<void>;
 }>({
   isPrevent: undefined,
   status: undefined,
+  bindProtection: async () => undefined,
+  releaseProtection: async () => undefined,
 });
 
 export const CaptureProtectionProvider = ({ children }: any) => {
   const [status, setStatus] = useState<CaptureProtectionModuleStatus>();
   const [isPrevent, setPrevent] = useState<CaptureEventStatus>();
+
+  const beforePrevent = useRef<CaptureEventStatus>();
+
+  const bindProtection = async () => {
+    if (isPrevent) {
+      beforePrevent.current = { ...isPrevent };
+    }
+    preventScreenRecord(true);
+    preventScreenshot();
+  };
+
+  const releaseProtection = async (rollback?: boolean) => {
+    if (rollback) {
+      if (!beforePrevent.current?.record) {
+        allowScreenRecord();
+      }
+      if (!beforePrevent.current?.screenshot) {
+        allowScreenshot();
+      }
+      beforePrevent.current = undefined;
+    } else {
+      allowScreenRecord();
+      allowScreenshot();
+    }
+  };
 
   useEffect(() => {
     addScreenRecordListener();
@@ -296,8 +340,9 @@ export const CaptureProtectionProvider = ({ children }: any) => {
     });
 
     isScreenRecording().then((recording) => {
-      if (recording)
+      if (recording) {
         setStatus(CaptureProtectionModuleStatus.RECORD_DETECTED_START);
+      }
     });
 
     addEventListener((callback) => {
@@ -308,7 +353,7 @@ export const CaptureProtectionProvider = ({ children }: any) => {
           : callback.status
       );
       if (callback.status === CaptureProtectionModuleStatus.CAPTURE_DETECTED) {
-        setTimeout(() => setStatus(undefined), 100);
+        setTimeout(() => setStatus(undefined), 1000);
       }
     });
     return () => {
@@ -319,7 +364,9 @@ export const CaptureProtectionProvider = ({ children }: any) => {
   }, []);
 
   return (
-    <CaptureProtectionContext.Provider value={{ isPrevent, status }}>
+    <CaptureProtectionContext.Provider
+      value={{ isPrevent, status, bindProtection, releaseProtection }}
+    >
       <>{children}</>
     </CaptureProtectionContext.Provider>
   );
