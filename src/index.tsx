@@ -39,6 +39,7 @@ const CaptureNotificationEmitter =
     ? new NativeEventEmitter(CaptureProtectionModule)
     : undefined;
 
+const CaptureProtectionEventType = 'CaptureProtectionListener' as const;
 /**
  *
  *  **This function only work in `iOS`**
@@ -54,7 +55,7 @@ function addEventListener(callback: CaptureEventListenerCallback): void {
     return;
   }
   CaptureNotificationEmitter?.addListener?.(
-    'CaptureProtectionListener',
+    CaptureProtectionEventType,
     callback
   );
 }
@@ -281,12 +282,6 @@ export const useCaptureProtectionFunction = () => {
   };
 };
 
-/**
- * Capture Protection Context API
- *
- * use hook `useCaptureProtection`
- *
- */
 const CaptureProtectionContext = createContext<{
   isPrevent: CaptureEventStatus | undefined;
   /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED` to unknown in `1000ms` */
@@ -302,6 +297,14 @@ const CaptureProtectionContext = createContext<{
   releaseProtection: async () => undefined,
 });
 
+/**
+ * Capture Protection Context API
+ *
+ * use hook `useCaptureProtection`
+ * 
+ * if Platform is Android, `status`, `isPrevent` may not be the case
+ *
+ */
 export const CaptureProtectionProvider = ({ children }: any) => {
   const [status, setStatus] = useState<CaptureProtectionModuleStatus>();
   const [isPrevent, setPrevent] = useState<CaptureEventStatus>();
@@ -311,6 +314,12 @@ export const CaptureProtectionProvider = ({ children }: any) => {
   const bindProtection = async () => {
     if (isPrevent) {
       beforePrevent.current = { ...isPrevent };
+    }
+    if (Platform.OS === 'android') {
+      const realPreventStatus = await getPreventStatus();
+      if (realPreventStatus) {
+        beforePrevent.current = { ...realPreventStatus };
+      }
     }
     preventScreenRecord(true);
     preventScreenshot();
@@ -358,7 +367,7 @@ export const CaptureProtectionProvider = ({ children }: any) => {
     });
     return () => {
       CaptureNotificationEmitter?.removeAllListeners(
-        'CaptureProtectionListener'
+        CaptureProtectionEventType
       );
     };
   }, []);
