@@ -301,7 +301,7 @@ const CaptureProtectionContext = createContext<{
  * Capture Protection Context API
  *
  * use hook `useCaptureProtection`
- * 
+ *
  * if Platform is Android, `status`, `isPrevent` may not be the case
  *
  */
