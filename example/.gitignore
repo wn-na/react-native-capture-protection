@@ -70,3 +70,5 @@ android/keystores/debug.keystore
 lib/
 
 package-lock.json
+yarn.lock
+*/Podfile.lock
