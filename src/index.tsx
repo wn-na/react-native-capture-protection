@@ -35,23 +35,21 @@ const CaptureProtectionModule = NativeModules.CaptureProtection
     );
 
 const CaptureNotificationEmitter =
-  Platform.OS === 'ios'
+  Platform.OS === 'ios' || Platform.OS === 'android'
     ? new NativeEventEmitter(CaptureProtectionModule)
     : undefined;
 
 const CaptureProtectionEventType = 'CaptureProtectionListener' as const;
 /**
  *
- *  **This function only work in `iOS`**
- *
  * create listener `addRecordEventListener`
  *
- * `RECORD_DETECTED_START`, `RECORD_DETECTED_END`, `CAPTURE_DETECTED` status return with event listener be registered
+ * `RECORD_DETECTED_START`, `RECORD_DETECTED_END`, `CAPTURE_DETECTED`, `UNKNOWN` status return with event listener be registered
  *
  *  - return with `prevent status`
  */
 function addEventListener(callback: CaptureEventListenerCallback): void {
-  if (Platform.OS !== 'ios') {
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
     return;
   }
   CaptureNotificationEmitter?.addListener?.(
