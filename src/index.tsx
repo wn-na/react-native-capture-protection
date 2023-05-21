@@ -279,7 +279,7 @@ export const useCaptureProtectionFunction = () => {
 
   return {
     isPrevent,
-    /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED`, `CaptureProtectionModuleStatus.RECORD_DETECTED_ENDto` to unknown in `1000ms` */
+    /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED`, `CaptureProtectionModuleStatus.RECORD_DETECTED_END` to unknown in `1000ms` */
     status,
     allowScreenshot: allowScreenshotFunc,
     preventScreenshot,
@@ -290,7 +290,7 @@ export const useCaptureProtectionFunction = () => {
 
 const CaptureProtectionContext = createContext<{
   isPrevent: CaptureEventStatus | undefined;
-  /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED`, `CaptureProtectionModuleStatus.RECORD_DETECTED_ENDto` unknown in `1000ms` */
+  /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED`, `CaptureProtectionModuleStatus.RECORD_DETECTED_END` to unknown in `1000ms` */
   status: CaptureProtectionModuleStatus | undefined;
   /** prevent all capture, record event */
   bindProtection: () => Promise<void>;
