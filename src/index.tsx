@@ -255,12 +255,14 @@ export const useCaptureProtectionFunction = () => {
 
     addEventListener((callback) => {
       setPrevent(callback.isPrevent);
-      setStatus(
-        callback.status === CaptureProtectionModuleStatus.UNKNOWN
-          ? undefined
-          : callback.status
-      );
-      if (callback.status === CaptureProtectionModuleStatus.CAPTURE_DETECTED) {
+
+      if (callback.status !== CaptureProtectionModuleStatus.UNKNOWN) {
+        setStatus(callback.status);
+      }
+      if (
+        callback.status === CaptureProtectionModuleStatus.CAPTURE_DETECTED ||
+        callback.status === CaptureProtectionModuleStatus.RECORD_DETECTED_END
+      ) {
         setTimeout(() => setStatus(undefined), 1000);
       }
     });
@@ -271,7 +273,7 @@ export const useCaptureProtectionFunction = () => {
 
   return {
     isPrevent,
-    /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED` to unknown in `1000ms` */
+    /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED`, `CaptureProtectionModuleStatus.RECORD_DETECTED_ENDto` to unknown in `1000ms` */
     status,
     allowScreenshot: allowScreenshotFunc,
     preventScreenshot,
@@ -282,7 +284,7 @@ export const useCaptureProtectionFunction = () => {
 
 const CaptureProtectionContext = createContext<{
   isPrevent: CaptureEventStatus | undefined;
-  /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED` to unknown in `1000ms` */
+  /** if Capture detect, status will change `CaptureProtectionModuleStatus.CAPTURE_DETECTED`, `CaptureProtectionModuleStatus.RECORD_DETECTED_ENDto` unknown in `1000ms` */
   status: CaptureProtectionModuleStatus | undefined;
   /** prevent all capture, record event */
   bindProtection: () => Promise<void>;
@@ -354,12 +356,14 @@ export const CaptureProtectionProvider = ({ children }: any) => {
 
     addEventListener((callback) => {
       setPrevent({ ...callback.isPrevent });
-      setStatus(
-        callback.status === CaptureProtectionModuleStatus.UNKNOWN
-          ? undefined
-          : callback.status
-      );
-      if (callback.status === CaptureProtectionModuleStatus.CAPTURE_DETECTED) {
+
+      if (callback.status !== CaptureProtectionModuleStatus.UNKNOWN) {
+        setStatus(callback.status);
+      }
+      if (
+        callback.status === CaptureProtectionModuleStatus.CAPTURE_DETECTED ||
+        callback.status === CaptureProtectionModuleStatus.RECORD_DETECTED_END
+      ) {
         setTimeout(() => setStatus(undefined), 1000);
       }
     });
