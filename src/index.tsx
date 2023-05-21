@@ -216,14 +216,20 @@ const hasListener = async (): Promise<CaptureEventStatus | undefined> => {
 };
 
 /**
- *  **This function only work in `iOS`**
+ * in `iOS`
  *
  * return UIScreen value of `isCaptured`
  *
  * more information, visit `https://developer.apple.com/documentation/uikit/uiscreen/2921651-captured`
+ *
+ * in `Android`
+ *
+ * When a virtual screen is detected, it return `true`.
+ *
+ * **However, if you launch the app while it is already recording, it may not be detected.**
  */
 const isScreenRecording = async (): Promise<boolean | undefined> => {
-  if (Platform.OS !== 'ios') {
+  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
     return;
   }
   return await CaptureProtectionModule?.isScreenRecording?.();

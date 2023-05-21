@@ -2,6 +2,8 @@ package com.captureprotection;
 
 import androidx.annotation.NonNull;
 import android.util.Log;
+import android.content.Context;
+import android.hardware.display.DisplayManager;
 
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -16,14 +18,94 @@ import com.facebook.react.bridge.Arguments;
 
 import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
 
+import java.util.List;
+import java.util.ArrayList;
+
 @ReactModule(name = CaptureProtectionModule.NAME)
 public class CaptureProtectionModule extends ReactContextBaseJavaModule {
   public static final String NAME = "CaptureProtection";
   private final ReactApplicationContext reactContext;
+  private final DisplayManager displayManager;
+  private List<Integer> screens;
 
   public CaptureProtectionModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
+    screens = new ArrayList<>();
+
+    displayManager = (DisplayManager) reactContext.getSystemService(Context.DISPLAY_SERVICE);
+    displayManager.registerDisplayListener(new DisplayManager.DisplayListener() {
+      @Override
+      public void onDisplayAdded(int displayId) {
+        runOnUiThread(() -> {
+          if (displayManager.getDisplay(displayId) == null) {
+            screens.add(displayId);
+          }
+          try {
+            boolean flags = isSecureFlag();
+            sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, flags, flags,
+                screens.isEmpty()
+                    ? CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal()
+                    : CaptureProtectionConstant.CaptureProtectionModuleStatus.RECORD_DETECTED_START.ordinal());
+
+            Log.d(NAME, "=> display add event " + displayId);
+          } catch (Exception e) {
+            Log.e(NAME, "display add event Error with displayId: " + displayId + ", error: " + e.getMessage());
+          }
+        });
+
+      }
+
+      @Override
+      public void onDisplayRemoved(int displayId) {
+        runOnUiThread(() -> {
+          int index = screens.indexOf(displayId);
+          if (index > -1) {
+            screens.remove(index);
+          }
+          try {
+            boolean flags = isSecureFlag();
+            sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, flags, flags,
+                !screens.isEmpty()
+                    ? CaptureProtectionConstant.CaptureProtectionModuleStatus.RECORD_DETECTED_START.ordinal()
+                    : CaptureProtectionConstant.CaptureProtectionModuleStatus.RECORD_DETECTED_END.ordinal());
+            Log.d(NAME, "=> display remove event " + displayId);
+          } catch (Exception e) {
+            Log.e(NAME, "display remove event Error with displayId: " + displayId + ", error: " + e.getMessage());
+          }
+        });
+
+      }
+
+      @Override
+      public void onDisplayChanged(int displayId) {
+        Log.d(NAME, "=> display change event " + displayId);
+      }
+    }, null);
+  }
+
+  private int listenerCount = 0;
+
+  @ReactMethod
+  public void addListener(String eventName) {
+    if (listenerCount == 0) {
+      // Set up any upstream listeners or background tasks as necessary
+    }
+
+    listenerCount += 1;
+  }
+
+  @ReactMethod
+  public void removeListeners(Integer count) {
+    listenerCount -= count;
+    if (listenerCount == 0) {
+      // Remove upstream listeners, stop unnecessary background tasks
+    }
+  }
+
+  private boolean isSecureFlag() {
+    return (reactContext.getCurrentActivity().getWindow().getAttributes().flags
+        & WindowManager.LayoutParams.FLAG_SECURE) != 0;
   }
 
   @Override
@@ -39,69 +121,75 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
         .emit(eventName, params);
   }
 
-  private WritableMap createPreventStatusMap(boolean screenshot, boolean record) {
+  private void sendEvent(String eventName, boolean preventRecord, boolean preventScreenshot, int status) {
+    WritableMap params = Arguments.createMap();
+    params.putMap("isPrevent", createPreventStatusMap(preventScreenshot, preventRecord));
+    params.putInt("status", status);
+    Log.d(NAME, "send event \'" + eventName + "\' params: " + params.toString());
+    this.reactContext
+        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+        .emit(eventName, params);
+  }
+
+  private WritableMap createPreventStatusMap(boolean screenshot, boolean recordScreen) {
     WritableMap statusMap = Arguments.createMap();
     statusMap.putBoolean("screenshot", screenshot);
-    statusMap.putBoolean("record", record);
+    statusMap.putBoolean("record", recordScreen);
     return statusMap;
   }
 
   @ReactMethod
+  public void isScreenRecording(Promise promise) {
+    runOnUiThread(() -> {
+      try {
+        promise.resolve(screens.size() > 1);
+      } catch (Exception e) {
+        promise.reject("preventScreenshot", e);
+      }
+    });
+  }
+
+  @ReactMethod
   public void preventScreenshot(Promise promise) {
-    runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          reactContext.getCurrentActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+    runOnUiThread(() -> {
+      try {
+        reactContext.getCurrentActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
 
-          WritableMap params = Arguments.createMap();
-          params.putMap("isPrevent", createPreventStatusMap(true, true));
-          params.putInt("status", CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal());
-          sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, params);
-
-          promise.resolve(true);
-        } catch (Exception e) {
-          promise.reject("preventScreenshot", e);
-        }
+        sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, true, true,
+            CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal());
+        promise.resolve(true);
+      } catch (Exception e) {
+        promise.reject("preventScreenshot", e);
       }
     });
   }
 
   @ReactMethod
   public void allowScreenshot(Promise promise) {
-    runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          reactContext.getCurrentActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+    runOnUiThread(() -> {
+      try {
+        reactContext.getCurrentActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
 
-          WritableMap params = Arguments.createMap();
-          params.putMap("isPrevent", createPreventStatusMap(false, false));
-          params.putInt("status", CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal());
-          sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, params);
+        sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, false, false,
+            CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal());
 
-          promise.resolve(true);
-        } catch (Exception e) {
-          promise.reject("allowScreenshot", e);
-        }
+        promise.resolve(true);
+      } catch (Exception e) {
+        promise.reject("allowScreenshot", e);
       }
     });
   }
 
   @ReactMethod
   public void getPreventStatus(Promise promise) {
-    runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          boolean flags = (reactContext.getCurrentActivity().getWindow().getAttributes().flags
-              & WindowManager.LayoutParams.FLAG_SECURE) != 0;
-          WritableMap statusMap = createPreventStatusMap(flags, flags);
+    runOnUiThread(() -> {
+      try {
+        boolean flags = isSecureFlag();
+        WritableMap statusMap = createPreventStatusMap(flags, flags);
 
-          promise.resolve(statusMap);
-        } catch (Exception e) {
-          promise.reject("getPreventStatus", e);
-        }
+        promise.resolve(statusMap);
+      } catch (Exception e) {
+        promise.reject("getPreventStatus", e);
       }
     });
   }
