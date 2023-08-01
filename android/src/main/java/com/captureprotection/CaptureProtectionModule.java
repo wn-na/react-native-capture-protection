@@ -1,6 +1,9 @@
 package com.captureprotection;
 
 import androidx.annotation.NonNull;
+
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
@@ -34,6 +37,13 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
     screens = new ArrayList<>();
 
     displayManager = (DisplayManager) reactContext.getSystemService(Context.DISPLAY_SERVICE);
+
+    Handler mainHandler = new Handler(reactContext.getMainLooper(), new Handler.Callback() {
+      @Override
+      public boolean handleMessage(@NonNull Message msg) {
+        return false;
+      }
+    });
     displayManager.registerDisplayListener(new DisplayManager.DisplayListener() {
       @Override
       public void onDisplayAdded(int displayId) {
@@ -81,7 +91,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
       public void onDisplayChanged(int displayId) {
         Log.d(NAME, "=> display change event " + displayId);
       }
-    }, null);
+    }, mainHandler);
   }
 
   private int listenerCount = 0;
