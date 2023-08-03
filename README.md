@@ -11,8 +11,8 @@ npm install react-native-capture-protection
 ## Preview
 
 ### prevent, allow screenshot in iOS
-![Simulator Screen Recording - iPhone 14 - 2022-12-09 at 16 02 15](https://user-images.githubusercontent.com/37437842/206644553-e4c3f2bc-b624-47ac-a005-132199e049b2.gif)
 
+![Simulator Screen Recording - iPhone 14 - 2022-12-09 at 16 02 15](https://user-images.githubusercontent.com/37437842/206644553-e4c3f2bc-b624-47ac-a005-132199e049b2.gif)
 
 ## Usage
 
@@ -20,19 +20,29 @@ npm install react-native-capture-protection
 import {
   CaptureProtection,
   CaptureProtectionModuleStatus,
+  isCapturedStatus
 } from 'react-native-capture-protection';
 
-CaptureProtection.addRecordEventListener(({ status, isPrevent }) => {
-  if (
-    status == CaptureProtectionModuleStatus.RECORD_DETECTED_START &&
-    isPrevent?.record
-  ) {
-    Alert.alert('Warning', 'record detected');
-  }
-});
+const Component = (props) => {
+  const { isPrevent, status } = useCaptureProtection();
 
-await CaptureProtection.preventScreenRecord();
-await CaptureProtection.allowScreenRecord();
+  React.useEffect(() => {
+    console.log('Prevent Status is', isPrevent);
+  }, [isPrevent]);
+  React.useEffect(() => {
+    console.log('Capture Status is', isCapturedStatus(status));
+  }, [status]);
+
+  const onPrevent = () => {
+    CaptureProtection.preventScreenRecord();
+  }
+  const onAllow = () => {
+    CaptureProtection.allowScreenRecord();
+  }
+
+  ...
+
+};
 ```
 
 More Infomation, please read this
