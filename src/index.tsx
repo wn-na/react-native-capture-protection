@@ -223,6 +223,7 @@ const hasListener = async (): Promise<CaptureEventStatus | undefined> => {
  * more information, visit `https://developer.apple.com/documentation/uikit/uiscreen/2921651-captured`
  *
  * in `Android`
+ * **This feature may not work. This is an experimental feature**
  *
  * When a virtual screen is detected, it return `true`.
  *
