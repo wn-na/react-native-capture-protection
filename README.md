@@ -1,20 +1,22 @@
 # react-native-capture-protection
 
-simple control capture event (like screenshot, screen record) in Android, iOS Native
+> 🚀 Simple control capture event (like screenshot, screen record) in Android, iOS + React Native
+
+![Simulator Screen Recording](https://user-images.githubusercontent.com/37437842/206644553-e4c3f2bc-b624-47ac-a005-132199e049b2.gif)
+
+## Features
+
+- iOS Capture Event via screen recording, capture capture with Listener
+- allow, prevent Android, iOS Capture Event
+- allow, prevent iOS Record Screen
+- Provider, Hooks
+- RN 0.73 and higher
 
 ## Installation
 
 ```sh
 npm install react-native-capture-protection
 ```
-
-## Preview
-
-### prevent, allow screenshot in iOS
-
-![Simulator Screen Recording - iPhone 14 - 2022-12-09 at 16 02 15](https://user-images.githubusercontent.com/37437842/206644553-e4c3f2bc-b624-47ac-a005-132199e049b2.gif)
-
-## Usage
 
 ```js
 import {
@@ -45,11 +47,10 @@ const Component = (props) => {
 };
 ```
 
-More Infomation, please read this
+## Docs
 
 - [method](https://github.com/0xlethe/react-native-capture-protection/wiki/method)
 - [type](https://github.com/0xlethe/react-native-capture-protection/wiki/type)
-- [migration to v1](https://github.com/0xlethe/react-native-capture-protection/wiki/how-to-migration-v0-to-v1)
 
 ## Contributing
 
