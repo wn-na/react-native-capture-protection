@@ -4,12 +4,14 @@
 #import <React/RCTBridge.h>
 #import <React/RCTEventDispatcher.h>
 static int TAG_RECORD_PROTECTION_SCREEN = -1002;
+static int TAG_SCREEN_PROTECTION = -1004;
 
 @implementation CaptureProtection {
     bool hasScreenRecordObserver;
     bool hasScreenshotObserver;
     bool isPreventScreenRecord;
     bool isPreventScreenshot;
+    bool isBundleObserver;
     enum CaptureProtectionStatus {
         INIT_RECORD_LISTENER,
         REMOVE_RECORD_LISTENER,
@@ -51,6 +53,24 @@ RCT_EXPORT_MODULE();
 // Observer Event
 - (void)eventScreenshot: (NSNotification *)notification {
     [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:CAPTURE_DETECTED]];  
+}
+
+- (void)bundleObserver {
+    [[NSNotificationCenter defaultCenter] addObserverForName:RCTBridgeWillReloadNotification object:nil queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSLog(@"RCTBridgeWillReloadNotification");
+            if (self->secureTextField) {
+                [self->secureTextField setSecureTextEntry:false];
+            }
+            [self removeScreenShotObserver];
+            [self removeScreenRecordObserver];
+            self->protecterViewController = nil;
+            self->hasScreenRecordObserver = false;
+            self->hasScreenshotObserver = false;
+            self->isPreventScreenRecord = false;
+            self->isPreventScreenshot = false;
+        });
+    }];
 }
 
 - (void)eventScreenRecordWithInit: (NSNotification *)notification init:(BOOL) init {
@@ -130,15 +150,20 @@ RCT_EXPORT_MODULE();
 
 - (void)secureScreenshotView: (BOOL)isSecure  { 
     dispatch_async(dispatch_get_main_queue(), ^{
+        if (self->isBundleObserver != true) {
+            self->isBundleObserver = true;
+            [self bundleObserver];
+        }
         if (self->secureTextField == nil) {
             self->secureTextField = [[UITextField alloc] init];
             self->secureTextField.userInteractionEnabled = false;
+            self->secureTextField.tag = TAG_SCREEN_PROTECTION;
             UIWindow *window = [UIApplication sharedApplication].keyWindow;
+            
             [window makeKeyAndVisible];
             
             [window.layer.superlayer addSublayer:self->secureTextField.layer]; 
             [self->secureTextField.layer.sublayers.firstObject addSublayer:window.layer];
- 
         }
         [self->secureTextField setSecureTextEntry:isSecure];
     });
