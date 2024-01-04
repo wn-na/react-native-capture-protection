@@ -1,5 +1,8 @@
 package com.captureprotection;
 
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.Manifest;
 import androidx.annotation.NonNull;
 
 import android.os.Handler;
@@ -20,7 +23,9 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.Arguments;
 
 import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
+import androidx.core.content.ContextCompat;
 
+import androidx.core.app.ActivityCompat;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -203,4 +208,33 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
       }
     });
   }
+
+  @ReactMethod
+  public void requestPermission(Promise promise) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      Log.d("requestPermission", "Permission is granted for under sdk version 23");
+      promise.resolve(true);
+      return;
+    }
+
+    if (Build.VERSION.SDK_INT < 34) {
+      // TODO: Android 14 didn't require storage permission, use
+      // android.permission.DETECT_SCREEN_CAPTURE instead.
+    }
+
+    String requestPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        ? Manifest.permission.READ_MEDIA_IMAGES
+        : Manifest.permission.READ_EXTERNAL_STORAGE;
+
+    if (ContextCompat.checkSelfPermission(
+        reactContext.getCurrentActivity(), requestPermission) == PackageManager.PERMISSION_GRANTED) {
+      Log.d("requestPermission", "Permission is granted");
+      promise.resolve(true);
+    } else {
+      Log.d("requestPermission", "Permission is revoked");
+      ActivityCompat.requestPermissions(reactContext.getCurrentActivity(), new String[] { requestPermission }, 1);
+      promise.resolve(false);
+    }
+  }
+
 }
