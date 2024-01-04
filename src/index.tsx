@@ -237,6 +237,21 @@ const isScreenRecording = async (): Promise<boolean | undefined> => {
 };
 
 /**
+ *  **This function only work in `Android`**
+ *
+ * request Storage or Detect Capture(for Android 14) Permission
+ */
+const requestPermission = async (): Promise<boolean> => {
+  if (Platform.OS === 'android') {
+    return await CaptureProtectionModule?.requestPermission?.();
+  } else {
+    console.error(
+      '[React-native-capture-protection] requestPermission is only available on Android'
+    );
+    return false;
+  }
+};
+/**
  * return prevent status
  */
 const getPreventStatus = async (): Promise<CaptureEventStatus | undefined> => {
@@ -421,6 +436,7 @@ export const CaptureProtection = {
    */
   hasListener,
   isScreenRecording,
+  requestPermission,
   getPreventStatus,
   useCaptureProtection: useCaptureProtectionFunction,
 };
