@@ -97,7 +97,7 @@ const setScreenRecordScreenWithImage = async (
  */
 const allowScreenRecord = async (removeListener = false): Promise<void> => {
   if (Platform.OS === 'android') {
-    return await CaptureProtectionModule?.allowScreenshot?.();
+    return await CaptureProtectionModule?.allowScreenshot?.(removeListener);
   }
   if (Platform.OS === 'ios') {
     return await CaptureProtectionModule?.allowScreenRecord?.(removeListener);
@@ -129,7 +129,7 @@ const preventScreenRecord = async (isImmediate = false): Promise<void> => {
  */
 const allowScreenshot = async (removeListener = false): Promise<void> => {
   if (Platform.OS === 'android') {
-    return await CaptureProtectionModule?.allowScreenshot?.();
+    return await CaptureProtectionModule?.allowScreenshot?.(removeListener);
   }
   if (Platform.OS === 'ios') {
     return await CaptureProtectionModule?.allowScreenshot?.(removeListener);
@@ -177,20 +177,19 @@ const removeScreenRecordListener = async (): Promise<void> => {
 };
 
 /**
- *  **This function only work in `iOS`**
- *
  *  add only screenshot event listener
  */
 const addScreenshotListener = async (): Promise<void> => {
-  if (Platform.OS !== 'ios') {
-    return;
+  if (Platform.OS === 'android') {
+    return await CaptureProtectionModule?.addScreenshotListener?.();
   }
-  return await CaptureProtectionModule?.addScreenshotListener?.();
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.addScreenshotListener?.();
+  }
+  return;
 };
 
 /**
- *  **This function only work in `iOS`**
- *
  *  remove only screenshot event listener
  *
  *  this function didnt remove prevent screenshot event
@@ -198,21 +197,28 @@ const addScreenshotListener = async (): Promise<void> => {
  *  if remove prevent screenshot, use `preventScreenshot`
  */
 const removeScreenshotListener = async (): Promise<void> => {
-  if (Platform.OS !== 'ios') {
-    return;
+  if (Platform.OS === 'android') {
+    return await CaptureProtectionModule?.removeScreenshotListener?.();
   }
-  return await CaptureProtectionModule?.removeScreenshotListener?.();
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.removeScreenshotListener?.();
+  }
+  return;
 };
 
 /**
- *  **This function only work in `iOS`**
  *
- * return listener regist status */
+ * return listener regist status
+ *
+ * if `android`, recording status is always return `false` */
 const hasListener = async (): Promise<CaptureEventStatus | undefined> => {
-  if (Platform.OS !== 'ios') {
-    return;
+  if (Platform.OS === 'android') {
+    return await CaptureProtectionModule?.hasListener?.();
   }
-  return await CaptureProtectionModule?.hasListener?.();
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.hasListener?.();
+  }
+  return;
 };
 
 /**
