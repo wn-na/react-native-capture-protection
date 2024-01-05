@@ -1,33 +1,38 @@
 package com.captureprotection;
 
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.Manifest;
-import androidx.annotation.NonNull;
-
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.database.ContentObserver;
+import android.database.Cursor;
 import android.hardware.display.DisplayManager;
+import android.Manifest;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
+import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
-import android.view.WindowManager;
-import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.Arguments;
-
-import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
-import androidx.core.content.ContextCompat;
-
-import androidx.core.app.ActivityCompat;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.concurrent.Executor;
+import java.util.List;
 
 @ReactModule(name = CaptureProtectionModule.NAME)
 public class CaptureProtectionModule extends ReactContextBaseJavaModule {
@@ -36,14 +41,17 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
   private final DisplayManager displayManager;
   private List<Integer> screens;
 
+  private ContentObserver contentObserver = null;
+
+  Handler mainHandler;
+
   public CaptureProtectionModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
     screens = new ArrayList<>();
-
     displayManager = (DisplayManager) reactContext.getSystemService(Context.DISPLAY_SERVICE);
 
-    Handler mainHandler = new Handler(reactContext.getMainLooper(), new Handler.Callback() {
+    mainHandler = new Handler(reactContext.getMainLooper(), new Handler.Callback() {
       @Override
       public boolean handleMessage(@NonNull Message msg) {
         return false;
@@ -99,34 +107,80 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
     }, mainHandler);
   }
 
-  private int listenerCount = 0;
-
-  @ReactMethod
-  public void addListener(String eventName) {
-    if (listenerCount == 0) {
-      // Set up any upstream listeners or background tasks as necessary
+  private boolean requestStoragePermission() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      Log.d(NAME, "Permission is granted for under sdk version 23");
+      return true;
     }
 
-    listenerCount += 1;
+    if (Build.VERSION.SDK_INT < 34) {
+      // TODO: Android 14 didn't require storage permission, use
+      // android.permission.DETECT_SCREEN_CAPTURE instead.
+    }
+
+    String requestPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        ? Manifest.permission.READ_MEDIA_IMAGES
+        : Manifest.permission.READ_EXTERNAL_STORAGE;
+
+    if (ContextCompat.checkSelfPermission(
+        reactContext.getCurrentActivity(), requestPermission) == PackageManager.PERMISSION_GRANTED) {
+      Log.d(NAME, "Permission is granted");
+      return true;
+    } else {
+      Log.d(NAME, "Permission is revoked");
+      ActivityCompat.requestPermissions(reactContext.getCurrentActivity(), new String[] { requestPermission }, 1);
+      return false;
+    }
   }
 
-  @ReactMethod
-  public void removeListeners(Integer count) {
-    listenerCount -= count;
-    if (listenerCount == 0) {
-      // Remove upstream listeners, stop unnecessary background tasks
+  private void addListener() {
+    if (contentObserver == null) {
+      requestStoragePermission();
+      contentObserver = new ContentObserver(mainHandler) {
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+          Log.d(NAME, "contentObserver onChange " + uri.toString());
+          if (uri.toString().matches(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() + "/[0-9]+")) {
+
+            Cursor cursor = null;
+            try {
+              cursor = reactContext.getContentResolver().query(uri, new String[] {
+                  MediaStore.Images.Media.DATA
+              }, null, null, null);
+
+              if (cursor != null && cursor.moveToFirst()) {
+                final String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+                if (path != null && path.toLowerCase().contains("screenshots")) {
+                  Log.d(NAME, "contentObserver detect screenshot file" + path);
+                  boolean flags = isSecureFlag();
+                  sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, flags, flags,
+                      CaptureProtectionConstant.CaptureProtectionModuleStatus.CAPTURE_DETECTED.ordinal());
+
+                }
+              }
+            } finally {
+              if (cursor != null) {
+                cursor.close();
+              }
+            }
+          }
+          super.onChange(selfChange, uri);
+        }
+      };
+      reactContext.getContentResolver().registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, true,
+          contentObserver);
+    }
+  }
+
+  private void removeListener() {
+    if (contentObserver != null) {
+      reactContext.getContentResolver().unregisterContentObserver(contentObserver);
     }
   }
 
   private boolean isSecureFlag() {
     return (reactContext.getCurrentActivity().getWindow().getAttributes().flags
         & WindowManager.LayoutParams.FLAG_SECURE) != 0;
-  }
-
-  @Override
-  @NonNull
-  public String getName() {
-    return NAME;
   }
 
   private void sendEvent(String eventName, WritableMap params) {
@@ -153,6 +207,34 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
     return statusMap;
   }
 
+  @Override
+  @NonNull
+  public String getName() {
+    return NAME;
+  }
+
+  @ReactMethod
+  public void addScreenshotListener() {
+    addListener();
+  }
+
+  @ReactMethod
+  public void removeScreenshotListener() {
+    removeListener();
+  }
+
+  @ReactMethod
+  public void hasListener(Promise promise) {
+    runOnUiThread(() -> {
+      try {
+        WritableMap params = createPreventStatusMap(contentObserver != null, false);
+        promise.resolve(params);
+      } catch (Exception e) {
+        promise.reject("hasListener", e);
+      }
+    });
+  }
+
   @ReactMethod
   public void isScreenRecording(Promise promise) {
     runOnUiThread(() -> {
@@ -172,6 +254,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
 
         sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, true, true,
             CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal());
+        addListener();
         promise.resolve(true);
       } catch (Exception e) {
         promise.reject("preventScreenshot", e);
@@ -180,14 +263,16 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void allowScreenshot(Promise promise) {
+  public void allowScreenshot(Boolean removeListener, Promise promise) {
     runOnUiThread(() -> {
       try {
         reactContext.getCurrentActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
 
         sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, false, false,
             CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal());
-
+        if (removeListener == true) {
+          removeListener();
+        }
         promise.resolve(true);
       } catch (Exception e) {
         promise.reject("allowScreenshot", e);
@@ -211,30 +296,8 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void requestPermission(Promise promise) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      Log.d("requestPermission", "Permission is granted for under sdk version 23");
-      promise.resolve(true);
-      return;
-    }
-
-    if (Build.VERSION.SDK_INT < 34) {
-      // TODO: Android 14 didn't require storage permission, use
-      // android.permission.DETECT_SCREEN_CAPTURE instead.
-    }
-
-    String requestPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-        ? Manifest.permission.READ_MEDIA_IMAGES
-        : Manifest.permission.READ_EXTERNAL_STORAGE;
-
-    if (ContextCompat.checkSelfPermission(
-        reactContext.getCurrentActivity(), requestPermission) == PackageManager.PERMISSION_GRANTED) {
-      Log.d("requestPermission", "Permission is granted");
-      promise.resolve(true);
-    } else {
-      Log.d("requestPermission", "Permission is revoked");
-      ActivityCompat.requestPermissions(reactContext.getCurrentActivity(), new String[] { requestPermission }, 1);
-      promise.resolve(false);
-    }
+    boolean isPermission = requestStoragePermission();
+    promise.resolve(isPermission);
+    return;
   }
-
 }
