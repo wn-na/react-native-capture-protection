@@ -52,6 +52,8 @@ function addEventListener(callback: CaptureEventListenerCallback): void {
   if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
     return;
   }
+  addScreenshotListener();
+  addScreenRecordListener();
   CaptureNotificationEmitter?.addListener?.(
     CaptureProtectionEventType,
     callback
@@ -210,7 +212,7 @@ const removeScreenshotListener = async (): Promise<void> => {
  *
  * return listener regist status
  *
- * if `android`, recording status is always return `false` */
+ */
 const hasListener = async (): Promise<CaptureEventStatus | undefined> => {
   if (Platform.OS === 'android') {
     return await CaptureProtectionModule?.hasListener?.();
@@ -421,25 +423,10 @@ export const CaptureProtection = {
   preventScreenshot,
   allowScreenRecord,
   preventScreenRecord,
-  /**
-   * @deprecated
-   */
   addScreenshotListener,
-  /**
-   * @deprecated
-   */
   removeScreenshotListener,
-  /**
-   * @deprecated
-   */
   addScreenRecordListener,
-  /**
-   * @deprecated
-   */
   removeScreenRecordListener,
-  /**
-   * @deprecated
-   */
   hasListener,
   isScreenRecording,
   requestPermission,
