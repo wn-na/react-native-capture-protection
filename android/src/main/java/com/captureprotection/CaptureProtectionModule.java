@@ -118,8 +118,8 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
       // android.permission.DETECT_SCREEN_CAPTURE instead.
     }
 
-    String requestPermission = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-        ? Manifest.permission.READ_MEDIA_IMAGES
+    String requestPermission = Build.VERSION.SDK_INT >= 33 // Build.VERSION_CODES.TIRAMISU
+        ? "android.permission.READ_MEDIA_IMAGES" // Manifest.permission.READ_MEDIA_IMAGES
         : Manifest.permission.READ_EXTERNAL_STORAGE;
 
     if (ContextCompat.checkSelfPermission(
@@ -211,6 +211,16 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
   @NonNull
   public String getName() {
     return NAME;
+  }
+
+  @ReactMethod
+  public void addListener(String eventName) {
+    addListener();
+  }
+
+  @ReactMethod
+  public void removeListeners(Integer count) {
+    removeListener();
   }
 
   @ReactMethod
