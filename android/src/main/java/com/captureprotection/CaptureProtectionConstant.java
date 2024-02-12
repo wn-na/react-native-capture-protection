@@ -18,6 +18,7 @@ import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
 
 public class CaptureProtectionConstant {
   public static final String LISTENER_EVENT_NAME = "CaptureProtectionListener";
+  public static final String NAME = "CaptureProtection";
 
   public enum CaptureProtectionModuleStatus {
     /** @deprecated create record listener to use `addRecordCaptureProtecter` */
