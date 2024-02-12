@@ -1,5 +1,5 @@
 const path = require('path');
-const pak = require('../package.json');
+const pak = require('../../package.json');
 
 module.exports = {
   dependencies: {
@@ -7,7 +7,7 @@ module.exports = {
       ? {'react-native-flipper': {platforms: {ios: null}}}
       : {}),
     [pak.name]: {
-      root: path.join(__dirname, '..'),
+      root: path.join(__dirname, '../..'),
     },
   },
 };
