@@ -10,7 +10,8 @@
 - allow, prevent Android, iOS Capture Event
 - allow, prevent iOS Record Screen
 - Provider, Hooks
-- >= RN 0.64
+- > = RN 0.64
+- support Android 14
 
 ## Installation
 
