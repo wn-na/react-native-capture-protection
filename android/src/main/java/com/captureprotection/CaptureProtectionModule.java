@@ -9,8 +9,6 @@ import android.hardware.display.DisplayManager;
 import android.Manifest;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -19,6 +17,8 @@ import android.view.WindowManager;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import com.captureprotection.Utils;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -29,35 +29,85 @@ import static com.facebook.react.bridge.UiThreadUtil.runOnUiThread;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.facebook.react.bridge.LifecycleEventListener;
 
+import java.lang.reflect.*;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
 import java.util.List;
 
-@ReactModule(name = CaptureProtectionModule.NAME)
-public class CaptureProtectionModule extends ReactContextBaseJavaModule {
-  public static final String NAME = "CaptureProtection";
+@ReactModule(name = CaptureProtectionConstant.NAME)
+public class CaptureProtectionModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
+  private static final String NAME = CaptureProtectionConstant.NAME;
   private final ReactApplicationContext reactContext;
+  // DisplayManager is Add API level 17
   private final DisplayManager displayManager;
-  private List<Integer> screens;
+  private final DisplayManager.DisplayListener displayListener;
 
+  private List<Integer> screens = new ArrayList<>();
   private ContentObserver contentObserver = null;
 
-  Handler mainHandler;
+  // Activity.ScreenCaptureCallback is Add API level 34
+  public static Object screenCaptureCallback = null;
+
+  private Method getScreenCaptureCallback() {
+    if (Build.VERSION.SDK_INT < 34) {
+      return null;
+    }
+    return Utils.getMethod(reactContext.getCurrentActivity().getClass(), "registerScreenCaptureCallback");
+  }
+
+  public void createCaptureCallback() {
+    if (Build.VERSION.SDK_INT < 34) {
+      Log.d(NAME, "under Android 14 is not supported");
+      return;
+    }
+    if (screenCaptureCallback != null) {
+      return;
+    }
+    try {
+      for (Class clazz : new Activity().getClass().getDeclaredClasses()) {
+        if (clazz.getSimpleName().equals("ScreenCaptureCallback")) {
+          Class ScreenCaptureCallback = clazz;
+          Object dynamic = (Object) Proxy.newProxyInstance(
+              ScreenCaptureCallback.getClassLoader(), new Class<?>[] { ScreenCaptureCallback },
+              new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method m, Object[] args) throws Throwable {
+                  if (m.getName().equals("onScreenCaptured")) {
+                    try {
+                      Log.d(NAME, "=> capture onScreenCaptured add event ");
+                      boolean flags = isSecureFlag();
+                      sendEvent(
+                          CaptureProtectionConstant.LISTENER_EVENT_NAME,
+                          flags,
+                          flags,
+                          CaptureProtectionConstant.CaptureProtectionModuleStatus.CAPTURE_DETECTED.ordinal());
+                    } catch (Exception e) {
+                      Log.e(NAME, "onScreenCaptured has raise Exception: " + e.getLocalizedMessage());
+                    }
+                    return null;
+                  }
+
+                  return m.invoke(ScreenCaptureCallback, args);
+                }
+              });
+          screenCaptureCallback = dynamic;
+          break;
+        }
+      }
+
+    } catch (Exception e) {
+      Log.e(NAME, "createCaptureCallback has raise Exception: " + e.getLocalizedMessage());
+    }
+  }
 
   public CaptureProtectionModule(ReactApplicationContext reactContext) {
     super(reactContext);
     this.reactContext = reactContext;
-    screens = new ArrayList<>();
-    displayManager = (DisplayManager) reactContext.getSystemService(Context.DISPLAY_SERVICE);
 
-    mainHandler = new Handler(reactContext.getMainLooper(), new Handler.Callback() {
-      @Override
-      public boolean handleMessage(@NonNull Message msg) {
-        return false;
-      }
-    });
-    displayManager.registerDisplayListener(new DisplayManager.DisplayListener() {
+    displayManager = (DisplayManager) reactContext.getSystemService(Context.DISPLAY_SERVICE);
+    createCaptureCallback();
+    displayListener = new DisplayManager.DisplayListener() {
       @Override
       public void onDisplayAdded(int displayId) {
         runOnUiThread(() -> {
@@ -104,7 +154,48 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
       public void onDisplayChanged(int displayId) {
         Log.d(NAME, "=> display change event " + displayId);
       }
-    }, mainHandler);
+    };
+
+    displayManager.registerDisplayListener(displayListener, Utils.MainHandler.INSTANCE);
+    reactContext.addLifecycleEventListener(this);
+  }
+
+  @Override
+  public void onHostResume() {
+    try {
+      Method registerScreenCaptureCallback = getScreenCaptureCallback();
+      if (registerScreenCaptureCallback != null) {
+        if (screenCaptureCallback == null) {
+          createCaptureCallback();
+        }
+        registerScreenCaptureCallback.invoke(
+            reactContext.getCurrentActivity(),
+            Utils.MainExecutor.INSTANCE,
+            (Object) screenCaptureCallback);
+      }
+    } catch (Exception e) {
+      Log.e(NAME, "onHostResume has raise Exception: " + e.getLocalizedMessage());
+    }
+  }
+
+  @Override
+  public void onHostPause() {
+  }
+
+  @Override
+  public void onHostDestroy() {
+    try {
+      if (Build.VERSION.SDK_INT >= 34) {
+        Method method = Utils.getMethod(
+            reactContext.getCurrentActivity().getClass(),
+            "unregisterScreenCaptureCallback");
+        if (method != null && screenCaptureCallback != null) {
+          method.invoke(reactContext.getCurrentActivity(), (Object) screenCaptureCallback);
+        }
+      }
+    } catch (Exception e) {
+      Log.e(NAME, "onHostDestroy has raise Exception: " + e.getLocalizedMessage());
+    }
   }
 
   private boolean requestStoragePermission() {
@@ -113,17 +204,16 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
       return true;
     }
 
-    if (Build.VERSION.SDK_INT < 34) {
-      // TODO: Android 14 didn't require storage permission, use
-      // android.permission.DETECT_SCREEN_CAPTURE instead.
+    if (getScreenCaptureCallback() != null) {
+      return true;
     }
 
     String requestPermission = Build.VERSION.SDK_INT >= 33 // Build.VERSION_CODES.TIRAMISU
         ? "android.permission.READ_MEDIA_IMAGES" // Manifest.permission.READ_MEDIA_IMAGES
         : Manifest.permission.READ_EXTERNAL_STORAGE;
 
-    if (ContextCompat.checkSelfPermission(
-        reactContext.getCurrentActivity(), requestPermission) == PackageManager.PERMISSION_GRANTED) {
+    if (ContextCompat.checkSelfPermission(reactContext.getCurrentActivity(),
+        requestPermission) == PackageManager.PERMISSION_GRANTED) {
       Log.d(NAME, "Permission is granted");
       return true;
     } else {
@@ -134,41 +224,47 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
   }
 
   private void addListener() {
-    if (contentObserver == null) {
-      requestStoragePermission();
-      contentObserver = new ContentObserver(mainHandler) {
-        @Override
-        public void onChange(boolean selfChange, Uri uri) {
-          Log.d(NAME, "contentObserver onChange " + uri.toString());
-          if (uri.toString().matches(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() + "/[0-9]+")) {
+    if (getScreenCaptureCallback() == null) {
+      if (contentObserver == null) {
+        requestStoragePermission();
+        contentObserver = new ContentObserver(Utils.MainHandler.INSTANCE) {
+          @Override
+          public void onChange(boolean selfChange, Uri uri) {
+            if (uri.toString().matches(MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString() + "/[0-9]+")) {
+              Cursor cursor = null;
+              try {
+                cursor = reactContext.getContentResolver().query(uri, new String[] {
+                    MediaStore.Images.Media.DATA
+                }, null, null, null);
 
-            Cursor cursor = null;
-            try {
-              cursor = reactContext.getContentResolver().query(uri, new String[] {
-                  MediaStore.Images.Media.DATA
-              }, null, null, null);
-
-              if (cursor != null && cursor.moveToFirst()) {
-                final String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-                if (path != null && path.toLowerCase().contains("screenshots")) {
-                  Log.d(NAME, "contentObserver detect screenshot file" + path);
-                  boolean flags = isSecureFlag();
-                  sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, flags, flags,
-                      CaptureProtectionConstant.CaptureProtectionModuleStatus.CAPTURE_DETECTED.ordinal());
-
+                if (cursor != null && cursor.moveToFirst()) {
+                  final String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
+                  if (path != null && path.toLowerCase().contains("screenshots")) {
+                    Log.d(NAME, "contentObserver detect screenshot file" + path);
+                    boolean flags = isSecureFlag();
+                    sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, flags, flags,
+                        CaptureProtectionConstant.CaptureProtectionModuleStatus.CAPTURE_DETECTED.ordinal());
+                  }
+                }
+              } finally {
+                if (cursor != null) {
+                  cursor.close();
                 }
               }
-            } finally {
-              if (cursor != null) {
-                cursor.close();
-              }
             }
+            super.onChange(selfChange, uri);
           }
-          super.onChange(selfChange, uri);
-        }
-      };
-      reactContext.getContentResolver().registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, true,
-          contentObserver);
+        };
+
+        reactContext.getContentResolver().registerContentObserver(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            true,
+            contentObserver);
+      }
+    } else {
+      if (screenCaptureCallback == null) {
+        createCaptureCallback();
+      }
     }
   }
 
@@ -192,19 +288,9 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
 
   private void sendEvent(String eventName, boolean preventRecord, boolean preventScreenshot, int status) {
     WritableMap params = Arguments.createMap();
-    params.putMap("isPrevent", createPreventStatusMap(preventScreenshot, preventRecord));
+    params.putMap("isPrevent", Utils.createPreventStatusMap(preventScreenshot, preventRecord));
     params.putInt("status", status);
-    Log.d(NAME, "send event \'" + eventName + "\' params: " + params.toString());
-    this.reactContext
-        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-        .emit(eventName, params);
-  }
-
-  private WritableMap createPreventStatusMap(boolean screenshot, boolean recordScreen) {
-    WritableMap statusMap = Arguments.createMap();
-    statusMap.putBoolean("screenshot", screenshot);
-    statusMap.putBoolean("record", recordScreen);
-    return statusMap;
+    sendEvent(eventName, params);
   }
 
   @Override
@@ -237,7 +323,9 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
   public void hasListener(Promise promise) {
     runOnUiThread(() -> {
       try {
-        WritableMap params = createPreventStatusMap(contentObserver != null, false);
+        WritableMap params = Utils.createPreventStatusMap(
+            contentObserver != null || getScreenCaptureCallback() != null,
+            displayListener != null);
         promise.resolve(params);
       } catch (Exception e) {
         promise.reject("hasListener", e);
@@ -295,8 +383,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule {
     runOnUiThread(() -> {
       try {
         boolean flags = isSecureFlag();
-        WritableMap statusMap = createPreventStatusMap(flags, flags);
-
+        WritableMap statusMap = Utils.createPreventStatusMap(flags, flags);
         promise.resolve(statusMap);
       } catch (Exception e) {
         promise.reject("getPreventStatus", e);
