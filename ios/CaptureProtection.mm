@@ -99,7 +99,8 @@ RCT_EXPORT_MODULE();
     
     UIImageView *imageView = [[UIImageView alloc] initWithImage:image];
     imageView.frame = window.frame;
-    imageView.contentMode = UIViewContentModeScaleAspectFill;
+    [imageView setClipsToBounds:YES];
+    imageView.contentMode = UIViewContentModeScaleAspectFit;
     [protecterViewController.view addSubview:imageView];
     [protecterViewController.view setBackgroundColor:[UIColor whiteColor]];
 }
