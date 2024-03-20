@@ -53,7 +53,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
     if (Build.VERSION.SDK_INT < 34) {
       return null;
     }
-    return Utils.getMethod(reactContext.getCurrentActivity().getClass(), "registerScreenCaptureCallback");
+    return Utils.getMethod(getCurrentActivity().getClass(), "registerScreenCaptureCallback");
   }
 
   public void createCaptureCallback() {
@@ -169,7 +169,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
           createCaptureCallback();
         }
         registerScreenCaptureCallback.invoke(
-            reactContext.getCurrentActivity(),
+            getCurrentActivity(),
             Utils.MainExecutor.INSTANCE,
             (Object) screenCaptureCallback);
       }
@@ -187,10 +187,10 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
     try {
       if (Build.VERSION.SDK_INT >= 34) {
         Method method = Utils.getMethod(
-            reactContext.getCurrentActivity().getClass(),
+            getCurrentActivity().getClass(),
             "unregisterScreenCaptureCallback");
         if (method != null && screenCaptureCallback != null) {
-          method.invoke(reactContext.getCurrentActivity(), (Object) screenCaptureCallback);
+          method.invoke(getCurrentActivity(), (Object) screenCaptureCallback);
         }
       }
     } catch (Exception e) {
@@ -212,13 +212,13 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
         ? "android.permission.READ_MEDIA_IMAGES" // Manifest.permission.READ_MEDIA_IMAGES
         : Manifest.permission.READ_EXTERNAL_STORAGE;
 
-    if (ContextCompat.checkSelfPermission(reactContext.getCurrentActivity(),
+    if (ContextCompat.checkSelfPermission(getCurrentActivity(),
         requestPermission) == PackageManager.PERMISSION_GRANTED) {
       Log.d(NAME, "Permission is granted");
       return true;
     } else {
       Log.d(NAME, "Permission is revoked");
-      ActivityCompat.requestPermissions(reactContext.getCurrentActivity(), new String[] { requestPermission }, 1);
+      ActivityCompat.requestPermissions(getCurrentActivity(), new String[] { requestPermission }, 1);
       return false;
     }
   }
@@ -275,7 +275,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
   }
 
   private boolean isSecureFlag() {
-    return (reactContext.getCurrentActivity().getWindow().getAttributes().flags
+    return (getCurrentActivity().getWindow().getAttributes().flags
         & WindowManager.LayoutParams.FLAG_SECURE) != 0;
   }
 
@@ -348,7 +348,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
   public void preventScreenshot(Promise promise) {
     runOnUiThread(() -> {
       try {
-        reactContext.getCurrentActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        getCurrentActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
 
         sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, true, true,
             CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal());
@@ -364,7 +364,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
   public void allowScreenshot(Boolean removeListener, Promise promise) {
     runOnUiThread(() -> {
       try {
-        reactContext.getCurrentActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        getCurrentActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
 
         sendEvent(CaptureProtectionConstant.LISTENER_EVENT_NAME, false, false,
             CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal());
