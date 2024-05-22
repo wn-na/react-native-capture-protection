@@ -208,17 +208,22 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
       return true;
     }
 
-    String requestPermission = Build.VERSION.SDK_INT >= 33 // Build.VERSION_CODES.TIRAMISU
-        ? "android.permission.READ_MEDIA_IMAGES" // Manifest.permission.READ_MEDIA_IMAGES
-        : Manifest.permission.READ_EXTERNAL_STORAGE;
+    try {
+      String requestPermission = Build.VERSION.SDK_INT >= 33 // Build.VERSION_CODES.TIRAMISU
+          ? "android.permission.READ_MEDIA_IMAGES" // Manifest.permission.READ_MEDIA_IMAGES
+          : Manifest.permission.READ_EXTERNAL_STORAGE;
 
-    if (ContextCompat.checkSelfPermission(getCurrentActivity(),
-        requestPermission) == PackageManager.PERMISSION_GRANTED) {
-      Log.d(NAME, "Permission is granted");
-      return true;
-    } else {
-      Log.d(NAME, "Permission is revoked");
-      ActivityCompat.requestPermissions(getCurrentActivity(), new String[] { requestPermission }, 1);
+      if (ContextCompat.checkSelfPermission(getCurrentActivity(),
+          requestPermission) == PackageManager.PERMISSION_GRANTED) {
+        Log.d(NAME, "Permission is granted");
+        return true;
+      } else {
+        Log.d(NAME, "Permission is revoked");
+        ActivityCompat.requestPermissions(getCurrentActivity(), new String[] { requestPermission }, 1);
+        return false;
+      }
+    } catch (Exception e) {
+      Log.e(NAME, "requestStoragePermission has raise Exception: " + e.getLocalizedMessage());
       return false;
     }
   }
