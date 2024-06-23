@@ -7,6 +7,7 @@ static int TAG_RECORD_PROTECTION_SCREEN = -1002;
 static int TAG_SCREEN_PROTECTION = -1004;
 
 @implementation CaptureProtection {
+    bool hasListeners;
     bool hasScreenRecordObserver;
     bool hasScreenshotObserver;
     bool isPreventScreenRecord;
@@ -52,7 +53,9 @@ RCT_EXPORT_MODULE();
 
 // Observer Event
 - (void)eventScreenshot: (NSNotification *)notification {
-    [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:CAPTURE_DETECTED]];  
+    if (hasListeners) {
+        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:CAPTURE_DETECTED]];
+    }
 }
 
 - (void)bundleObserver {
@@ -79,11 +82,15 @@ RCT_EXPORT_MODULE();
         if (isPreventScreenRecord) {
             [self createRecordProtectionScreen];
         }
-        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:RECORD_DETECTED_START]];
+        if (hasListeners) {
+            [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:RECORD_DETECTED_START]];
+        }
     } else {
         [self removeRecordProtectionScreen];
         if (!init) {
-            [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:RECORD_DETECTED_END]];
+            if (hasListeners) {
+                [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:RECORD_DETECTED_END]];
+            }
         }
     }
 }
@@ -196,6 +203,13 @@ RCT_EXPORT_MODULE();
         [[NSNotificationCenter defaultCenter] removeObserver:self name:UIScreenCapturedDidChangeNotification object:nil];
         hasScreenRecordObserver = NO;
     }
+}
+- (void) startObserving {
+    hasListeners = YES;
+}
+
+- (void) stopObserving {
+    hasListeners = NO;
 }
 
 RCT_REMAP_METHOD(setScreenRecordScreenWithImage,
@@ -328,7 +342,9 @@ RCT_REMAP_METHOD(allowScreenshot,
             [self removeScreenShotObserver];
         }
         isPreventScreenshot = NO;
-        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
+        if (hasListeners) {
+            [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
+        }
         resolve(@(YES));
     }
     @catch (NSException *e) {
@@ -345,7 +361,9 @@ RCT_REMAP_METHOD(preventScreenshot,
         [self secureScreenshotView:true];
         [self addScreenShotObserver];
         isPreventScreenshot = YES;
-        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
+        if (hasListeners) {
+            [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
+        }
         resolve(@(YES));
     }
     @catch (NSException *e) {
@@ -365,7 +383,9 @@ RCT_REMAP_METHOD(allowScreenRecord,
             [self removeScreenRecordObserver];
         }
         isPreventScreenRecord = NO;
-        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
+        if (hasListeners) {
+            [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
+        }
         resolve(@(YES));
     }
     @catch (NSException *e) {
@@ -385,7 +405,9 @@ RCT_REMAP_METHOD(preventScreenRecord,
         if (isImmediate) {
             [self eventScreenRecordWithInit:nil init:true];
         }
-        [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
+        if (hasListeners) {
+            [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
+        }
         resolve(@(YES));
     }
     @catch (NSException *e) {
