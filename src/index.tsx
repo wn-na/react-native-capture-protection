@@ -154,6 +154,20 @@ const preventScreenshot = async (): Promise<void> => {
   return undefined;
 };
 
+const allowBackground = async (): Promise<void> => {
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.allowBackground?.();
+  }
+  return undefined;
+};
+
+const preventBackground = async (): Promise<void> => {
+  if (Platform.OS === 'ios') {
+    return await CaptureProtectionModule?.preventBackground?.();
+  }
+  return undefined;
+};
+
 /**
  *  **This function only work in `iOS`**
  *
@@ -432,6 +446,8 @@ export const CaptureProtection = {
   requestPermission,
   getPreventStatus,
   useCaptureProtection: useCaptureProtectionFunction,
+  allowBackground,
+  preventBackground,
 };
 
 export { CaptureProtectionModuleStatus, CaptureEventStatus } from './type';

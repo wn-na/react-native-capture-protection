@@ -23,8 +23,11 @@ static int TAG_SCREEN_PROTECTION = -1004;
         CAPTURE_DETECTED,
         UNKNOWN
     };
+    bool isBackgroundObserver;
+    bool isPreventBackground;
     UITextField* secureTextField;
     UIViewController *protecterViewController;
+    UIViewController *protecterScreenViewController;
 }
 
 RCT_EXPORT_MODULE();
@@ -156,11 +159,74 @@ RCT_EXPORT_MODULE();
     });
 }
 
-- (void)secureScreenshotView: (BOOL)isSecure  { 
+- (void) addBackgroundObserver {
+    [[NSNotificationCenter defaultCenter] addObserverForName: UIApplicationWillResignActiveNotification
+                                                      object:nil queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSLog(@"UIApplicationWillResignActiveNotification");
+            [self secureBackgroundView:true];
+        });
+    }];
+    [[NSNotificationCenter defaultCenter] addObserverForName: UIApplicationDidEnterBackgroundNotification
+                                                      object:nil queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSLog(@"UIApplicationDidEnterBackgroundNotification");
+            [self secureBackgroundView:true];
+        });
+    }];
+    
+   [[NSNotificationCenter defaultCenter] addObserverForName: UIApplicationDidBecomeActiveNotification
+                                                     object:nil queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+       dispatch_async(dispatch_get_main_queue(), ^{
+           NSLog(@"UIApplicationDidBecomeActiveNotification");
+           [self secureBackgroundView:false];
+       });
+   }];
+    [[NSNotificationCenter defaultCenter] addObserverForName: UIApplicationWillEnterForegroundNotification
+                                                      object:nil queue:nil usingBlock:^(NSNotification * _Nonnull note) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSLog(@"UIApplicationWillEnterForegroundNotification");
+            [self secureBackgroundView:false];
+        });
+    }];
+}
+
+- (void)secureBackgroundView: (BOOL)show  {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self->protecterScreenViewController != nil) {
+            [self->protecterScreenViewController willMoveToParentViewController:nil];
+            [self->protecterScreenViewController.view removeFromSuperview];
+            [self->protecterScreenViewController removeFromParentViewController];
+        }
+        if (!self->isPreventBackground) {
+            return;
+        }
+        
+        if (show) {
+            UIViewController* viewController = [[UIViewController alloc] init];
+            viewController.view.window.windowLevel = UIWindowLevelAlert;
+            self->protecterScreenViewController = viewController;
+            viewController.view.backgroundColor = UIColor.whiteColor;
+            UIWindow *window = [UIApplication sharedApplication].keyWindow;
+            
+            [window makeKeyAndVisible];
+            
+            [window.layer.superlayer addSublayer:viewController.view.layer];
+            [self->secureTextField.layer.sublayers.firstObject addSublayer:viewController.view.window.layer];
+        }
+    
+    });
+}
+
+- (void)secureScreenshotView: (BOOL)isSecure  {
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self->isBundleObserver != true) {
             self->isBundleObserver = true;
             [self bundleObserver];
+        }
+        if (self->isBackgroundObserver != true) {
+            self->isBackgroundObserver = true;
+            [self addBackgroundObserver];
         }
         if (self->secureTextField == nil) {
             self->secureTextField = [[UITextField alloc] init];
@@ -170,7 +236,7 @@ RCT_EXPORT_MODULE();
             
             [window makeKeyAndVisible];
             
-            [window.layer.superlayer addSublayer:self->secureTextField.layer]; 
+            [window.layer.superlayer addSublayer:self->secureTextField.layer];
             [self->secureTextField.layer.sublayers.firstObject addSublayer:window.layer];
         }
         [self->secureTextField setSecureTextEntry:isSecure];
@@ -191,7 +257,11 @@ RCT_EXPORT_MODULE();
     }
 }
 
-- (void) addScreenRecordObserver { 
+- (void) addScreenRecordObserver {
+    if (self->isBackgroundObserver != true) {
+        self->isBackgroundObserver = true;
+        [self addBackgroundObserver];
+    }
     if (!hasScreenRecordObserver) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventScreenRecord:) name:UIScreenCapturedDidChangeNotification object:nil];
         hasScreenRecordObserver = YES;
@@ -330,6 +400,20 @@ RCT_REMAP_METHOD(removeScreenRecordListener,
     }
 };
 
+RCT_REMAP_METHOD(allowBackground,
+     allowBackgroundResolver: (RCTPromiseResolveBlock)resolve
+     allowBackgroundRejecter: (RCTPromiseRejectBlock)reject
+) {
+    isPreventBackground = NO;
+};
+
+RCT_REMAP_METHOD(preventBackground,
+                 preventBackgroundResolver: (RCTPromiseResolveBlock)resolve
+                 preventBackgroundRejecter: (RCTPromiseRejectBlock)reject
+) {
+    isPreventBackground = YES;
+};
+
 RCT_REMAP_METHOD(allowScreenshot,
     removeScreenshotListener: (BOOL)removeScreenshotListener
     allowScreenshotResolver: (RCTPromiseResolveBlock)resolve
@@ -341,6 +425,7 @@ RCT_REMAP_METHOD(allowScreenshot,
         if (removeScreenshotListener) {
             [self removeScreenShotObserver];
         }
+        isPreventBackground = NO;
         isPreventScreenshot = NO;
         if (hasListeners) {
             [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
@@ -360,7 +445,8 @@ RCT_REMAP_METHOD(preventScreenshot,
     @try { 
         [self secureScreenshotView:true];
         [self addScreenShotObserver];
-        isPreventScreenshot = YES;
+        isPreventBackground = YES;
+        isPreventBackground = YES;
         if (hasListeners) {
             [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
         }
@@ -422,5 +508,7 @@ RCT_REMAP_METHOD(preventScreenRecord,
     return std::make_shared<facebook::react::NativeCaptureProtectionSpecJSI>(params);
 }
 #endif
+
+
 
 @end
