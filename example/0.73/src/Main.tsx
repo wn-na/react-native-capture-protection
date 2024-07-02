@@ -1,13 +1,13 @@
 import * as React from 'react';
-import { StyleSheet, View, Button, Text } from 'react-native';
+import {StyleSheet, View, Button, Text} from 'react-native';
 import {
   CaptureProtection,
   CaptureProtectionModuleStatus,
   useCaptureProtection,
 } from 'react-native-capture-protection';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 export default function Main() {
-  const { isPrevent, status } = useCaptureProtection();
+  const {isPrevent, status} = useCaptureProtection();
   const navigation = useNavigation<any>();
 
   React.useEffect(() => {
@@ -16,19 +16,19 @@ export default function Main() {
   React.useEffect(() => {
     console.log(
       'Main Prevent Status is',
-      status ? CaptureProtectionModuleStatus?.[status] : undefined
+      status ? CaptureProtectionModuleStatus?.[status] : undefined,
     );
   }, [status]);
 
   return (
     <View style={styles.container}>
-      <Text style={{ color: isPrevent?.record ? 'blue' : 'black' }}>
+      <Text style={{color: isPrevent?.record ? 'blue' : 'black'}}>
         {'Record Prevent : ' + isPrevent?.record}
       </Text>
-      <Text style={{ color: isPrevent?.screenshot ? 'blue' : 'black' }}>
+      <Text style={{color: isPrevent?.screenshot ? 'blue' : 'black'}}>
         {'Screenshot Prevent : ' + isPrevent?.screenshot}
       </Text>
-      <Text style={{ color: 'black' }}>
+      <Text style={{color: 'black'}}>
         {'Status : ' +
           (status ? CaptureProtectionModuleStatus?.[status] : undefined)}
       </Text>
@@ -36,7 +36,7 @@ export default function Main() {
         title="set Record Protect Screen by Text"
         onPress={() => {
           CaptureProtection.setScreenRecordScreenWithText?.(
-            'This is Text Message!'
+            'This is Text Message!',
           );
         }}
       />
@@ -68,6 +68,18 @@ export default function Main() {
         title="prevent Screenshot"
         onPress={() => {
           CaptureProtection.preventScreenshot();
+        }}
+      />
+      <Button
+        title="allow background"
+        onPress={() => {
+          CaptureProtection.allowBackground();
+        }}
+      />
+      <Button
+        title="prevent background"
+        onPress={() => {
+          CaptureProtection.preventBackground();
         }}
       />
     </View>

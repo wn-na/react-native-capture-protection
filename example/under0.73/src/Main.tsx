@@ -70,6 +70,19 @@ export default function Main() {
           CaptureProtection.preventScreenshot();
         }}
       />
+
+      <Button
+        title="allow background"
+        onPress={() => {
+          CaptureProtection.allowBackground();
+        }}
+      />
+      <Button
+        title="prevent background"
+        onPress={() => {
+          CaptureProtection.preventBackground();
+        }}
+      />
     </View>
   );
 }
