@@ -446,7 +446,7 @@ RCT_REMAP_METHOD(preventScreenshot,
         [self secureScreenshotView:true];
         [self addScreenShotObserver];
         isPreventBackground = YES;
-        isPreventBackground = YES;
+        isPreventScreenshot = YES;
         if (hasListeners) {
             [self sendEventWithName:@"CaptureProtectionListener" body:[self eventMessage:UNKNOWN]];
         }
