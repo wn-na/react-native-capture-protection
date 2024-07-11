@@ -212,7 +212,7 @@ RCT_EXPORT_MODULE();
             [window makeKeyAndVisible];
             
             [window.layer.superlayer addSublayer:viewController.view.layer];
-            [self->secureTextField.layer.sublayers.firstObject addSublayer:viewController.view.window.layer];
+            [viewController.view.layer.sublayers.firstObject addSublayer:viewController.view.window.layer];
         }
     
     });
