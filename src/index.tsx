@@ -1,3 +1,10 @@
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Image,
   NativeEventEmitter,
@@ -9,13 +16,6 @@ import {
   CaptureEventStatus,
   CaptureProtectionModuleStatus,
 } from './type';
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
 
 const LINKING_ERROR =
   `The package 'react-native-capture-protection' doesn't seem to be linked. Make sure: \n\n` +
@@ -116,6 +116,7 @@ const allowScreenRecord = async (removeListener = false): Promise<void> => {
  */
 const preventScreenRecord = async (isImmediate = false): Promise<void> => {
   if (Platform.OS === 'android') {
+    await requestPermission();
     return await CaptureProtectionModule?.preventScreenshot?.();
   }
   if (Platform.OS === 'ios') {
@@ -146,6 +147,7 @@ const allowScreenshot = async (removeListener = false): Promise<void> => {
  */
 const preventScreenshot = async (): Promise<void> => {
   if (Platform.OS === 'android') {
+    await requestPermission();
     return await CaptureProtectionModule?.preventScreenshot?.();
   }
   if (Platform.OS === 'ios') {
@@ -265,7 +267,15 @@ const isScreenRecording = async (): Promise<boolean | undefined> => {
  */
 const requestPermission = async (): Promise<boolean> => {
   if (Platform.OS === 'android') {
-    return await CaptureProtectionModule?.requestPermission?.();
+    try {
+      return await CaptureProtectionModule?.requestPermission?.();
+    } catch (e) {
+      console.error(
+        '[React-native-capture-protection] requestPermission throw error',
+        e
+      );
+      return false;
+    }
   } else {
     console.error(
       '[React-native-capture-protection] requestPermission is only available on Android'
@@ -450,4 +460,4 @@ export const CaptureProtection = {
   preventBackground,
 };
 
-export { CaptureProtectionModuleStatus, CaptureEventStatus } from './type';
+export { CaptureEventStatus, CaptureProtectionModuleStatus } from './type';
