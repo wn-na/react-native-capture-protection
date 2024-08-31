@@ -43,6 +43,10 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
   private final DisplayManager displayManager;
   private final DisplayManager.DisplayListener displayListener;
 
+  private final String requestPermission = Build.VERSION.SDK_INT >= 33 // Build.VERSION_CODES.TIRAMISU
+      ? "android.permission.READ_MEDIA_IMAGES" // Manifest.permission.READ_MEDIA_IMAGES
+      : Manifest.permission.READ_EXTERNAL_STORAGE;
+
   private List<Integer> screens = new ArrayList<>();
   private ContentObserver contentObserver = null;
 
@@ -202,9 +206,8 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
     }
   }
 
-  private boolean requestStoragePermission() {
+  private boolean checkStoragePermission() {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-      Log.d(NAME, "Permission is granted for under sdk version 23");
       return true;
     }
 
@@ -213,23 +216,32 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
     }
 
     try {
-      String requestPermission = Build.VERSION.SDK_INT >= 33 // Build.VERSION_CODES.TIRAMISU
-          ? "android.permission.READ_MEDIA_IMAGES" // Manifest.permission.READ_MEDIA_IMAGES
-          : Manifest.permission.READ_EXTERNAL_STORAGE;
-
       if (getReactCurrentActivity() == null) {
         return false;
       }
 
-      if (ContextCompat.checkSelfPermission(getReactCurrentActivity(),
-          requestPermission) == PackageManager.PERMISSION_GRANTED) {
-        Log.d(NAME, "Permission is granted");
-        return true;
-      } else {
-        Log.d(NAME, "Permission is revoked");
-        ActivityCompat.requestPermissions(getReactCurrentActivity(), new String[] { requestPermission }, 1);
+      return (ContextCompat.checkSelfPermission(getReactCurrentActivity(),
+          requestPermission) == PackageManager.PERMISSION_GRANTED);
+    } catch (Exception e) {
+      Log.e(NAME, "checkStoragePermission has raise Exception: " + e.getLocalizedMessage());
+      return false;
+    }
+  }
+
+  private boolean requestStoragePermission() {
+    try {
+      boolean isGranted = checkStoragePermission();
+      if (getReactCurrentActivity() == null) {
         return false;
       }
+      if (isGranted) {
+        Log.d(NAME, "Permission is granted");
+        return true;
+      }
+
+      Log.d(NAME, "Permission is revoked");
+      ActivityCompat.requestPermissions(getReactCurrentActivity(), new String[] { requestPermission }, 1);
+      return false;
     } catch (Exception e) {
       Log.e(NAME, "requestStoragePermission has raise Exception: " + e.getLocalizedMessage());
       return false;
@@ -238,8 +250,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
 
   private void addListener() {
     if (getScreenCaptureCallback() == null) {
-      if (contentObserver == null) {
-        requestStoragePermission();
+      if (contentObserver == null && checkStoragePermission()) {
         contentObserver = new ContentObserver(Utils.MainHandler.INSTANCE) {
           @Override
           public void onChange(boolean selfChange, Uri uri) {
@@ -421,6 +432,13 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
   @ReactMethod
   public void requestPermission(Promise promise) {
     boolean isPermission = requestStoragePermission();
+    promise.resolve(isPermission);
+    return;
+  }
+
+  @ReactMethod
+  public void checkPermission(Promise promise) {
+    boolean isPermission = checkStoragePermission();
     promise.resolve(isPermission);
     return;
   }
