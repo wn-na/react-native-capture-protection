@@ -135,9 +135,13 @@ RCT_EXPORT_MODULE();
         UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
         UIViewController *captureProtectScreenController = (UIViewController *)[[window viewWithTag:TAG_RECORD_PROTECTION_SCREEN] nextResponder];
         if (captureProtectScreenController == nil) {
-            if(self->protecterViewController == nil) {
-                [self createRecordProtectionScreenWithText:@"record Detected"];
+            if(self->protecterViewController != nil) {
+                [self->protecterViewController willMoveToParentViewController:nil];
+                [self->protecterViewController.view removeFromSuperview];
+                [self->protecterViewController removeFromParentViewController];
             }
+            [self createRecordProtectionScreenWithText:@"record Detected"];
+            
             
             [window.rootViewController addChildViewController:self->protecterViewController];
             [window.rootViewController.view addSubview:self->protecterViewController.view];
@@ -207,7 +211,7 @@ RCT_EXPORT_MODULE();
             viewController.view.window.windowLevel = UIWindowLevelAlert;
             self->protecterScreenViewController = viewController;
             viewController.view.backgroundColor = UIColor.whiteColor;
-            UIWindow *window = [UIApplication sharedApplication].keyWindow;
+            UIWindow *window = [[UIApplication sharedApplication] delegate].window;
             
             [window makeKeyAndVisible];
             
@@ -232,12 +236,13 @@ RCT_EXPORT_MODULE();
             self->secureTextField = [[UITextField alloc] init];
             self->secureTextField.userInteractionEnabled = false;
             self->secureTextField.tag = TAG_SCREEN_PROTECTION;
-            UIWindow *window = [UIApplication sharedApplication].keyWindow;
+            UIWindow *window = [[UIApplication sharedApplication] delegate].window;
             
             [window makeKeyAndVisible];
             
             [window.layer.superlayer addSublayer:self->secureTextField.layer];
             [self->secureTextField.layer.sublayers.firstObject addSublayer:window.layer];
+            [self->secureTextField.layer.sublayers.lastObject addSublayer:window.layer];
         }
         [self->secureTextField setSecureTextEntry:isSecure];
     });
