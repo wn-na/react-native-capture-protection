@@ -61,7 +61,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
     if (Build.VERSION.SDK_INT < 34) {
       return null;
     }
-    return Utils.getMethod(getCurrentActivity().getClass(), "registerScreenCaptureCallback");
+    return Utils.getMethod(getReactCurrentActivity().getClass(), "registerScreenCaptureCallback");
   }
 
   public void createCaptureCallback() {
@@ -177,7 +177,7 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
           createCaptureCallback();
         }
         registerScreenCaptureCallback.invoke(
-            getCurrentActivity(),
+            getReactCurrentActivity(),
             Utils.MainExecutor.INSTANCE,
             (Object) screenCaptureCallback);
       }
@@ -195,10 +195,10 @@ public class CaptureProtectionModule extends ReactContextBaseJavaModule implemen
     try {
       if (Build.VERSION.SDK_INT >= 34) {
         Method method = Utils.getMethod(
-            getCurrentActivity().getClass(),
+            getReactCurrentActivity().getClass(),
             "unregisterScreenCaptureCallback");
         if (method != null && screenCaptureCallback != null) {
-          method.invoke(getCurrentActivity(), (Object) screenCaptureCallback);
+          method.invoke(getReactCurrentActivity(), (Object) screenCaptureCallback);
         }
       }
     } catch (Exception e) {
