@@ -66,13 +66,19 @@ function addEventListener(callback: CaptureEventListenerCallback): void {
  * setting Record Protect Screen with only Text
  */
 const setScreenRecordScreenWithText = async (
-  message: string
+  message: string,
+  // default color is black
+  messageColor = '#000000' as string,
+  // default color is white
+  backgroundColor = '#ffffff' as string
 ): Promise<void> => {
   if (Platform.OS !== 'ios') {
     return;
   }
   return await CaptureProtectionModule?.setScreenRecordScreenWithText?.(
-    message
+    message,
+    messageColor,
+    backgroundColor
   );
 };
 
