@@ -169,9 +169,11 @@ const allowBackground = async (): Promise<void> => {
   return undefined;
 };
 
-const preventBackground = async (): Promise<void> => {
+const preventBackground = async (
+  backgroundColor = '#ffffff' as string
+): Promise<void> => {
   if (Platform.OS === 'ios') {
-    return await CaptureProtectionModule?.preventBackground?.();
+    return await CaptureProtectionModule?.preventBackground?.(backgroundColor);
   }
   return undefined;
 };

@@ -32,6 +32,7 @@ static int TAG_SCREEN_PROTECTION = -1004;
     NSString* text;
     NSString* textColor;
     NSString* backgroundColor;
+    NSString* backgroundScreenColor;
 }
 
 RCT_EXPORT_MODULE();
@@ -265,7 +266,11 @@ RCT_EXPORT_MODULE();
             UIViewController* viewController = [[UIViewController alloc] init];
             viewController.view.window.windowLevel = UIWindowLevelAlert;
             self->protecterScreenViewController = viewController;
-            viewController.view.backgroundColor = UIColor.whiteColor;
+            viewController.view.backgroundColor = UIColor.redColor;
+            if (self->backgroundScreenColor == nil) {
+                self->backgroundScreenColor = @"#ffffff";
+            }
+            viewController.view.backgroundColor = [self colorFromHexString: self->backgroundScreenColor];
             UIWindow *window = [[UIApplication sharedApplication] delegate].window;
             
             [window makeKeyAndVisible];
@@ -480,11 +485,14 @@ RCT_REMAP_METHOD(allowBackground,
 };
 
 RCT_REMAP_METHOD(preventBackground,
+                 backgroundColor: (NSString *)backgroundColor
                  preventBackgroundResolver: (RCTPromiseResolveBlock)resolve
                  preventBackgroundRejecter: (RCTPromiseRejectBlock)reject
                  ) {
-    isPreventBackground = YES;
+    isPreventBackground = YES; 
+    self->backgroundScreenColor = backgroundColor;
 };
+
 
 RCT_REMAP_METHOD(allowScreenshot,
                  removeScreenshotListener: (BOOL)removeScreenshotListener
