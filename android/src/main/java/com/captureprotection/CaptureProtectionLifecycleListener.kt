@@ -14,6 +14,9 @@ import android.util.Log
 import android.view.WindowManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.captureprotection.constants.Constants
+import com.captureprotection.constants.StatusCode
+import com.captureprotection.utils.ModuleThread
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.lang.reflect.InvocationHandler
@@ -25,7 +28,7 @@ open class CaptureProtectionLifecycleListener(
         private val reactContext: ReactApplicationContext,
 ) : ReactContextBaseJavaModule(reactContext), LifecycleEventListener {
 
-    override fun getName() = CaptureProtectionConstant.NAME
+    override fun getName() = Constants.NAME
     val displayManager: DisplayManager =
             reactContext.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     val displayListener: DisplayManager.DisplayListener
@@ -47,7 +50,7 @@ open class CaptureProtectionLifecycleListener(
         if (Build.VERSION.SDK_INT < 34) {
             return null
         }
-        return Utils.getMethod(
+        return Reflection.getMethod(
                 getReactCurrentActivity()!!.javaClass,
                 "registerScreenCaptureCallback"
         )
@@ -55,7 +58,7 @@ open class CaptureProtectionLifecycleListener(
 
     fun createCaptureCallback() {
         if (Build.VERSION.SDK_INT < 34) {
-            Log.d(CaptureProtectionConstant.NAME, "under Android 14 is not supported")
+            Log.d(Constants.NAME, "under Android 14 is not supported")
             return
         }
         if (CaptureProtectionLifecycleListener.screenCaptureCallback != null) {
@@ -72,23 +75,19 @@ open class CaptureProtectionLifecycleListener(
                                         if (m.name == "onScreenCaptured") {
                                             try {
                                                 Log.d(
-                                                        CaptureProtectionConstant.NAME,
+                                                        Constants.NAME,
                                                         "=> capture onScreenCaptured add event "
                                                 )
                                                 val flags = isSecureFlag()
                                                 sendEvent(
-                                                        CaptureProtectionConstant
-                                                                .LISTENER_EVENT_NAME,
+                                                        Constants.LISTENER_EVENT_NAME,
                                                         flags,
                                                         flags,
-                                                        CaptureProtectionConstant
-                                                                .CaptureProtectionModuleStatus
-                                                                .CAPTURE_DETECTED
-                                                                .ordinal
+                                                        StatusCode.CAPTURE_DETECTED.ordinal
                                                 )
                                             } catch (e: Exception) {
                                                 Log.e(
-                                                        CaptureProtectionConstant.NAME,
+                                                        Constants.NAME,
                                                         "onScreenCaptured has raise Exception: " +
                                                                 e.localizedMessage
                                                 )
@@ -104,7 +103,7 @@ open class CaptureProtectionLifecycleListener(
             }
         } catch (e: Exception) {
             Log.e(
-                    CaptureProtectionConstant.NAME,
+                    Constants.NAME,
                     "createCaptureCallback has raise Exception: " + e.localizedMessage
             )
         }
@@ -122,26 +121,16 @@ open class CaptureProtectionLifecycleListener(
                             try {
                                 val flags = isSecureFlag()
                                 sendEvent(
-                                        CaptureProtectionConstant.LISTENER_EVENT_NAME,
+                                        Constants.LISTENER_EVENT_NAME,
                                         flags,
                                         flags,
-                                        if (screens.isEmpty())
-                                                CaptureProtectionConstant
-                                                        .CaptureProtectionModuleStatus.UNKNOWN
-                                                        .ordinal
-                                        else
-                                                CaptureProtectionConstant
-                                                        .CaptureProtectionModuleStatus
-                                                        .RECORD_DETECTED_START
-                                                        .ordinal
+                                        if (screens.isEmpty()) StatusCode.UNKNOWN.ordinal
+                                        else StatusCode.RECORD_DETECTED_START.ordinal
                                 )
-                                Log.d(
-                                        CaptureProtectionConstant.NAME,
-                                        "=> display add event $displayId"
-                                )
+                                Log.d(Constants.NAME, "=> display add event $displayId")
                             } catch (e: Exception) {
                                 Log.e(
-                                        CaptureProtectionConstant.NAME,
+                                        Constants.NAME,
                                         "display add event Error with displayId: $displayId, error: ${e.message}"
                                 )
                             }
@@ -157,27 +146,17 @@ open class CaptureProtectionLifecycleListener(
                             try {
                                 val flags = isSecureFlag()
                                 sendEvent(
-                                        CaptureProtectionConstant.LISTENER_EVENT_NAME,
+                                        Constants.LISTENER_EVENT_NAME,
                                         flags,
                                         flags,
                                         if (screens.isNotEmpty())
-                                                CaptureProtectionConstant
-                                                        .CaptureProtectionModuleStatus
-                                                        .RECORD_DETECTED_START
-                                                        .ordinal
-                                        else
-                                                CaptureProtectionConstant
-                                                        .CaptureProtectionModuleStatus
-                                                        .RECORD_DETECTED_END
-                                                        .ordinal
+                                                StatusCode.RECORD_DETECTED_START.ordinal
+                                        else StatusCode.RECORD_DETECTED_END.ordinal
                                 )
-                                Log.d(
-                                        CaptureProtectionConstant.NAME,
-                                        "=> display remove event $displayId"
-                                )
+                                Log.d(Constants.NAME, "=> display remove event $displayId")
                             } catch (e: Exception) {
                                 Log.e(
-                                        CaptureProtectionConstant.NAME,
+                                        Constants.NAME,
                                         "display remove event Error with displayId: $displayId, error: ${e.message}"
                                 )
                             }
@@ -185,10 +164,10 @@ open class CaptureProtectionLifecycleListener(
                     }
 
                     override fun onDisplayChanged(displayId: Int) {
-                        Log.d(CaptureProtectionConstant.NAME, "=> display change event $displayId")
+                        Log.d(Constants.NAME, "=> display change event $displayId")
                     }
                 }
-        displayManager.registerDisplayListener(displayListener, Utils.MainHandler)
+        displayManager.registerDisplayListener(displayListener, ModuleThread.MainHandler)
         reactContext.addLifecycleEventListener(this)
     }
 
@@ -201,15 +180,12 @@ open class CaptureProtectionLifecycleListener(
                 }
                 registerScreenCaptureCallback.invoke(
                         getReactCurrentActivity(),
-                        Utils.MainExecutor,
+                        ModuleThread.MainExecutor,
                         CaptureProtectionLifecycleListener.screenCaptureCallback
                 )
             }
         } catch (e: Exception) {
-            Log.e(
-                    CaptureProtectionConstant.NAME,
-                    "onHostResume has raise Exception: " + e.localizedMessage
-            )
+            Log.e(Constants.NAME, "onHostResume has raise Exception: " + e.localizedMessage)
         }
     }
 
@@ -219,7 +195,7 @@ open class CaptureProtectionLifecycleListener(
         try {
             if (Build.VERSION.SDK_INT >= 34) {
                 val method =
-                        Utils.getMethod(
+                        Reflection.getMethod(
                                 getReactCurrentActivity()!!.javaClass,
                                 "unregisterScreenCaptureCallback"
                         )
@@ -233,15 +209,12 @@ open class CaptureProtectionLifecycleListener(
                 }
             }
         } catch (e: Exception) {
-            Log.e(
-                    CaptureProtectionConstant.NAME,
-                    "onHostDestroy has raise Exception: " + e.localizedMessage
-            )
+            Log.e(Constants.NAME, "onHostDestroy has raise Exception: " + e.localizedMessage)
         }
     }
 
     fun sendEvent(eventName: String, params: WritableMap) {
-        Log.d(CaptureProtectionConstant.NAME, "send event '$eventName' params: $params")
+        Log.d(Constants.NAME, "send event '$eventName' params: $params")
         reactContext
                 .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
                 .emit(eventName, params)
@@ -253,9 +226,7 @@ open class CaptureProtectionLifecycleListener(
             preventScreenshot: Boolean,
             status: Int
     ) {
-        val params = Arguments.createMap()
-        params.putMap("isPrevent", Utils.createPreventStatusMap(preventScreenshot, preventRecord))
-        params.putInt("status", status)
+        val params = Response.createPreventWithStatusMap(status, preventScreenshot, preventRecord)
         sendEvent(eventName, params)
     }
 
@@ -274,7 +245,7 @@ open class CaptureProtectionLifecycleListener(
                     ?: false
         } catch (e: Exception) {
             Log.e(
-                    CaptureProtectionConstant.NAME,
+                    Constants.NAME,
                     "checkStoragePermission has raise Exception: " + e.localizedMessage
             )
             false
@@ -288,10 +259,10 @@ open class CaptureProtectionLifecycleListener(
                 return false
             }
             if (isGranted) {
-                Log.d(CaptureProtectionConstant.NAME, "Permission is granted")
+                Log.d(Constants.NAME, "Permission is granted")
                 return true
             }
-            Log.d(CaptureProtectionConstant.NAME, "Permission is revoked")
+            Log.d(Constants.NAME, "Permission is revoked")
             ActivityCompat.requestPermissions(
                     getReactCurrentActivity()!!,
                     arrayOf(requestPermission),
@@ -300,7 +271,7 @@ open class CaptureProtectionLifecycleListener(
             false
         } catch (e: Exception) {
             Log.e(
-                    CaptureProtectionConstant.NAME,
+                    Constants.NAME,
                     "requestStoragePermission has raise Exception: " + e.localizedMessage
             )
             false
@@ -313,7 +284,7 @@ open class CaptureProtectionLifecycleListener(
                             checkStoragePermission()
             ) {
                 CaptureProtectionLifecycleListener.contentObserver =
-                        object : ContentObserver(Utils.MainHandler) {
+                        object : ContentObserver(ModuleThread.MainHandler) {
                             override fun onChange(selfChange: Boolean, uri: Uri?) {
                                 if (uri != null &&
                                                 uri.toString()
@@ -348,19 +319,15 @@ open class CaptureProtectionLifecycleListener(
                                                                     .contains("screenshots")
                                             ) {
                                                 Log.d(
-                                                        CaptureProtectionConstant.NAME,
+                                                        Constants.NAME,
                                                         "CaptureProtectionLifecycleListener.contentObserver detect screenshot file$path"
                                                 )
                                                 val flags = isSecureFlag()
                                                 sendEvent(
-                                                        CaptureProtectionConstant
-                                                                .LISTENER_EVENT_NAME,
+                                                        Constants.LISTENER_EVENT_NAME,
                                                         flags,
                                                         flags,
-                                                        CaptureProtectionConstant
-                                                                .CaptureProtectionModuleStatus
-                                                                .CAPTURE_DETECTED
-                                                                .ordinal
+                                                        StatusCode.CAPTURE_DETECTED.ordinal
                                                 )
                                             }
                                         }

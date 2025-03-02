@@ -2,10 +2,12 @@ package com.captureprotection
 
 import android.util.Log
 import android.view.WindowManager
+import com.captureprotection.constants.Constants
+import com.captureprotection.constants.StatusCode
 import com.facebook.react.bridge.*
 import com.facebook.react.module.annotations.ReactModule
 
-@ReactModule(name = CaptureProtectionConstant.NAME)
+@ReactModule(name = Constants.NAME)
 class CaptureProtectionModule(private val reactContext: ReactApplicationContext) :
         CaptureProtectionLifecycleListener(reactContext) {
 
@@ -34,7 +36,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
     currentActivity?.runOnUiThread {
       try {
         val params =
-                Utils.createPreventStatusMap(
+                Response.createPreventMap(
                         CaptureProtectionLifecycleListener.contentObserver != null ||
                                 super.getScreenCaptureCallback() != null,
                         super.displayListener != null
@@ -63,15 +65,10 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
       try {
         val currentActivity = super.getReactCurrentActivity()
         if (currentActivity == null) {
-          Log.w(CaptureProtectionConstant.NAME, "preventScreenshot: Current Activity is null")
+          Log.w(Constants.NAME, "preventScreenshot: Current Activity is null")
         } else {
           currentActivity.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-          super.sendEvent(
-                  CaptureProtectionConstant.LISTENER_EVENT_NAME,
-                  true,
-                  true,
-                  CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal
-          )
+          super.sendEvent(Constants.LISTENER_EVENT_NAME, true, true, StatusCode.UNKNOWN.ordinal)
           super.addListener()
           promise.resolve(true)
         }
@@ -87,15 +84,10 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
       try {
         val currentActivity = super.getReactCurrentActivity()
         if (currentActivity == null) {
-          Log.w(CaptureProtectionConstant.NAME, "allowScreenshot: Current Activity is null")
+          Log.w(Constants.NAME, "allowScreenshot: Current Activity is null")
         } else {
           currentActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-          super.sendEvent(
-                  CaptureProtectionConstant.LISTENER_EVENT_NAME,
-                  false,
-                  false,
-                  CaptureProtectionConstant.CaptureProtectionModuleStatus.UNKNOWN.ordinal
-          )
+          super.sendEvent(Constants.LISTENER_EVENT_NAME, false, false, StatusCode.UNKNOWN.ordinal)
           if (removeListener) {
             super.removeListener()
           }
@@ -112,7 +104,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
     currentActivity?.runOnUiThread {
       try {
         val flags = super.isSecureFlag()
-        val statusMap = Utils.createPreventStatusMap(flags, flags)
+        val statusMap = Response.createPreventMap(flags, flags)
         promise.resolve(statusMap)
       } catch (e: Exception) {
         promise.reject("getPreventStatus", e)
