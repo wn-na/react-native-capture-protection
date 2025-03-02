@@ -3,6 +3,9 @@ buildscript {
   // This avoids unnecessary downloads and potential conflicts when the library is included as a
   // module dependency in an application project.
   if (project == rootProject) {
+    ext {
+      kotlinVersion = '1.8.0'
+    }
     repositories {
       google()
       mavenCentral()
@@ -10,6 +13,7 @@ buildscript {
 
     dependencies {
       classpath 'com.android.tools.build:gradle:3.5.3'
+      classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${project.ext.kotlinVersion}"
     }
   }
 }
@@ -19,6 +23,7 @@ def isNewArchitectureEnabled() {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: "kotlin-android"
 
 if (isNewArchitectureEnabled()) {
   apply plugin: 'com.facebook.react'
