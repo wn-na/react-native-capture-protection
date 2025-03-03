@@ -21,9 +21,6 @@ class CaptureProtection: RCTEventEmitter {
     private var backgroundColor: String?
     private var backgroundScreenColor: String?
     
-    static let TAG_RECORD_PROTECTION_SCREEN = -1002
-    static let TAG_SCREEN_PROTECTION = -1004
-    
     
     @objc(supportedEvents)
     override func supportedEvents() -> [String] {
@@ -45,21 +42,11 @@ class CaptureProtection: RCTEventEmitter {
         hasListeners = false
     }
     
-    private func eventMessage(status: CaptureProtectionStatus) -> [String: Any] {
-        return [
-            "status": status.rawValue,
-            "isPrevent": [
-                "screenshot": self.isPreventScreenshot,
-                "record": self.isPreventScreenRecord
-            ]
-        ]
-    }
-    
     func setScreenRecordScreen(withImage image: UIImage) {
         guard let window = UIApplication.shared.delegate?.window ?? nil else { return }
         
         let protectorVC = UIViewController()
-        protectorVC.view.tag = CaptureProtection.TAG_RECORD_PROTECTION_SCREEN
+        protectorVC.view.tag = Constants.TAG_RECORD_PROTECTION_SCREEN
         
         let imageView = UIImageView(image: image)
         imageView.frame = window.frame
@@ -81,7 +68,7 @@ class CaptureProtection: RCTEventEmitter {
         
         guard let window = UIApplication.shared.delegate?.window ?? nil else { return }
         
-        if let captureProtectScreenController = window.viewWithTag(CaptureProtection.TAG_RECORD_PROTECTION_SCREEN)?.next as? UIViewController {
+        if let captureProtectScreenController = window.viewWithTag(Constants.TAG_RECORD_PROTECTION_SCREEN)?.next as? UIViewController {
             captureProtectScreenController.willMove(toParent: nil)
             captureProtectScreenController.view.removeFromSuperview()
             captureProtectScreenController.removeFromParent()
@@ -94,12 +81,12 @@ class CaptureProtection: RCTEventEmitter {
         }
         
         let protectorVC = UIViewController()
-        protectorVC.view.tag = CaptureProtection.TAG_RECORD_PROTECTION_SCREEN
-        protectorVC.view.backgroundColor = colorFromHexString(hexString: self.backgroundColor!)
+        protectorVC.view.tag = Constants.TAG_RECORD_PROTECTION_SCREEN
+        protectorVC.view.backgroundColor = TextUtils.colorFromHexString(hexString: self.backgroundColor!)
         
         let label = UILabel()
         label.textAlignment = .center
-        label.textColor = colorFromHexString(hexString: self.textColor!)
+        label.textColor = TextUtils.colorFromHexString(hexString: self.textColor!)
         label.isUserInteractionEnabled = false
         label.text = self.text
         label.frame = window.frame
@@ -110,7 +97,7 @@ class CaptureProtection: RCTEventEmitter {
     
     @objc func eventScreenshot(notification: Notification) {
         if hasListeners {
-            self.sendEvent(withName: "CaptureProtectionListener", body: eventMessage(status: .CAPTURE_DETECTED))
+            self.sendEvent(withName: "CaptureProtectionListener", body: EventUtils.eventMessage(status: .CAPTURE_DETECTED, isPreventScreenshot: self.isPreventScreenshot, isPreventScreenRecord: self.isPreventScreenRecord))
         }
     }
     
@@ -118,44 +105,24 @@ class CaptureProtection: RCTEventEmitter {
         eventScreenRecordWithInit(notification: notification, _init: false)
     }
     
-    private func eventScreenRecordWithInit(notification: Notification, _init: Bool) { 
+    private func eventScreenRecordWithInit(notification: Notification, _init: Bool) {
         if let isCaptured = UIScreen.main.value(forKey: "isCaptured") as? Bool {
             if isCaptured {
                 if isPreventScreenRecord {
                     createRecordProtectionScreen()
                 }
                 if hasListeners {
-                    self.sendEvent(withName: "CaptureProtectionListener", body: eventMessage(status: .RECORD_DETECTED_START))
+                    self.sendEvent(withName: "CaptureProtectionListener", body: EventUtils.eventMessage(status: .RECORD_DETECTED_START, isPreventScreenshot: self.isPreventScreenshot, isPreventScreenRecord: self.isPreventScreenRecord))
                 }
             } else {
                 removeRecordProtectionScreen()
                 if !_init {
                     if hasListeners {
-                        self.sendEvent(withName: "CaptureProtectionListener", body: eventMessage(status: .RECORD_DETECTED_END))
+                        self.sendEvent(withName: "CaptureProtectionListener", body: EventUtils.eventMessage(status: .RECORD_DETECTED_END, isPreventScreenshot: self.isPreventScreenshot, isPreventScreenRecord: self.isPreventScreenRecord))
                     }
                 }
             }
         }
-    }
-    
-    private func colorFromHexString(hexString: String) -> UIColor {
-        var hexString = hexString
-        if hexString.hasPrefix("#") {
-            hexString.removeFirst()
-        }
-        
-        if hexString.count != 6 {
-            return .black
-        }
-        
-        var rgbValue: UInt64 = 0
-        Scanner(string: hexString).scanHexInt64(&rgbValue)
-        
-        let red = CGFloat((rgbValue >> 16) & 0xFF) / 255.0
-        let green = CGFloat((rgbValue >> 8) & 0xFF) / 255.0
-        let blue = CGFloat(rgbValue & 0xFF) / 255.0
-        
-        return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
     }
     
     private func bundleObserver() {
@@ -215,7 +182,7 @@ class CaptureProtection: RCTEventEmitter {
                 let viewController = UIViewController()
                 viewController.view.backgroundColor = UIColor.red
                 self.protecterScreenViewController = viewController
-                viewController.view.backgroundColor = self.colorFromHexString(hexString: self.backgroundScreenColor ?? "#ffffff")
+                viewController.view.backgroundColor = TextUtils.colorFromHexString(hexString: self.backgroundScreenColor ?? "#ffffff")
                 if let window = UIApplication.shared.delegate?.window {
                     window?.addSubview(viewController.view)
                 }
@@ -226,7 +193,7 @@ class CaptureProtection: RCTEventEmitter {
     private func createRecordProtectionScreen() {
         DispatchQueue.main.async {
             guard let window = UIApplication.shared.delegate?.window else { return }
-            if let existingViewController = window?.viewWithTag(CaptureProtection.TAG_RECORD_PROTECTION_SCREEN)?.next as? UIViewController {
+            if let existingViewController = window?.viewWithTag(Constants.TAG_RECORD_PROTECTION_SCREEN)?.next as? UIViewController {
                 existingViewController.view.removeFromSuperview()
                 existingViewController.removeFromParent()
             }
@@ -237,12 +204,12 @@ class CaptureProtection: RCTEventEmitter {
             }
             
             self.protecterViewController = UIViewController()
-            self.protecterViewController?.view.tag = CaptureProtection.TAG_RECORD_PROTECTION_SCREEN
-            self.protecterViewController?.view.backgroundColor = self.colorFromHexString(hexString: self.backgroundColor ?? "#ffffff")
+            self.protecterViewController?.view.tag = Constants.TAG_RECORD_PROTECTION_SCREEN
+            self.protecterViewController?.view.backgroundColor = TextUtils.colorFromHexString(hexString: self.backgroundColor ?? "#ffffff")
             
             let label = UILabel()
             label.textAlignment = .center
-            label.textColor = self.colorFromHexString(hexString: self.textColor ?? "#000000")
+            label.textColor = TextUtils.colorFromHexString(hexString: self.textColor ?? "#000000")
             label.text = self.text ?? "Record Detected"
             label.frame = window?.frame ?? CGRect.zero
             self.protecterViewController?.view.addSubview(label)
@@ -262,7 +229,7 @@ class CaptureProtection: RCTEventEmitter {
     private func removeRecordProtectionScreen() {
         DispatchQueue.main.async {
             guard let window = UIApplication.shared.delegate?.window else { return }
-            if let existingViewController = window?.viewWithTag(CaptureProtection.TAG_RECORD_PROTECTION_SCREEN)?.next as? UIViewController {
+            if let existingViewController = window?.viewWithTag(Constants.TAG_RECORD_PROTECTION_SCREEN)?.next as? UIViewController {
                 existingViewController.willMove(toParent: nil)
                 existingViewController.view.removeFromSuperview()
                 existingViewController.removeFromParent()
@@ -279,7 +246,7 @@ class CaptureProtection: RCTEventEmitter {
             self.isPreventBackground = false
             self.isPreventScreenshot = false
             if self.hasListeners {
-                self.sendEvent(withName: "CaptureProtectionListener", body: self.eventMessage(status: .UNKNOWN))
+                self.sendEvent(withName: "CaptureProtectionListener", body: EventUtils.eventMessage(status: .UNKNOWN, isPreventScreenshot: self.isPreventScreenshot, isPreventScreenRecord: self.isPreventScreenRecord))
             }
             resolver(true)
         }
@@ -292,7 +259,7 @@ class CaptureProtection: RCTEventEmitter {
             self.isPreventBackground = true
             self.isPreventScreenshot = true
             if self.hasListeners {
-                self.sendEvent(withName: "CaptureProtectionListener", body: self.eventMessage(status: .UNKNOWN))
+                self.sendEvent(withName: "CaptureProtectionListener", body: EventUtils.eventMessage(status: .UNKNOWN, isPreventScreenshot: self.isPreventScreenshot, isPreventScreenRecord: self.isPreventScreenRecord))
             }
             resolver(true)
         }
@@ -312,7 +279,7 @@ class CaptureProtection: RCTEventEmitter {
             if self.secureTextField == nil {
                 self.secureTextField = UITextField()
                 self.secureTextField?.isUserInteractionEnabled = false
-                self.secureTextField?.tag = CaptureProtection.TAG_SCREEN_PROTECTION
+                self.secureTextField?.tag = Constants.TAG_SCREEN_PROTECTION
                 if let window = UIApplication.shared.delegate?.window {
                     window?.makeKeyAndVisible()
                     
@@ -337,8 +304,8 @@ class CaptureProtection: RCTEventEmitter {
                 self.eventScreenRecordWithInit(notification: Notification(name: Notification.Name("Test")), _init: true)
             }
             if self.hasListeners {
-                self.sendEvent(withName: "CaptureProtectionListener", body: self.eventMessage(status: .UNKNOWN))
-            } 
+                self.sendEvent(withName: "CaptureProtectionListener", body: EventUtils.eventMessage(status: .UNKNOWN, isPreventScreenshot: self.isPreventScreenshot, isPreventScreenRecord: self.isPreventScreenRecord))
+            }
             resolver(true)
         }
     }
@@ -351,8 +318,8 @@ class CaptureProtection: RCTEventEmitter {
             }
             self.removeRecordProtectionScreen()
             if self.hasListeners {
-                self.sendEvent(withName: "CaptureProtectionListener", body: self.eventMessage(status: .UNKNOWN))
-            } 
+                self.sendEvent(withName: "CaptureProtectionListener", body: EventUtils.eventMessage(status: .UNKNOWN, isPreventScreenshot: self.isPreventScreenshot, isPreventScreenRecord: self.isPreventScreenRecord))
+            }
             resolver(true)
         }
     }
@@ -389,7 +356,7 @@ class CaptureProtection: RCTEventEmitter {
         self.hasScreenRecordObserver = false
         NotificationCenter.default.removeObserver(self, name: UIScreen.capturedDidChangeNotification, object: nil)
     }
-     
+    
     @objc func addScreenshotListener(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async {
             self.addScreenShotObserver()
@@ -441,7 +408,7 @@ class CaptureProtection: RCTEventEmitter {
         ]
         resolver(result)
     }
-
+    
     @objc func allowBackground(_ resolver: @escaping RCTPromiseResolveBlock,
                                rejecter: @escaping RCTPromiseRejectBlock) {
         isPreventBackground = false
@@ -453,9 +420,9 @@ class CaptureProtection: RCTEventEmitter {
                                  rejecter: @escaping RCTPromiseRejectBlock) {
         isPreventBackground = true
         self.backgroundScreenColor = backgroundColor
-        resolver(nil) 
+        resolver(nil)
     }
-
+    
     @objc func setScreenRecordScreenWithImage(_ screenImage: NSDictionary,
                                               resolver: @escaping RCTPromiseResolveBlock,
                                               rejecter: @escaping RCTPromiseRejectBlock) {
@@ -492,10 +459,3 @@ class CaptureProtection: RCTEventEmitter {
         }
     }
 }
-
-enum CaptureProtectionStatus: Int {
-    case UNKNOWN = 7
-    case CAPTURE_DETECTED = 6
-    case RECORD_DETECTED_START = 4
-    case RECORD_DETECTED_END = 5
-} 

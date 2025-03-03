@@ -27,6 +27,8 @@
 		0434F4A12D756B8300247D8B /* CaptureProtection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CaptureProtection.m; sourceTree = "<group>"; };
 		0434F4A52D756BAA00247D8B /* CaptureProtection-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CaptureProtection-Bridging-Header.h"; sourceTree = "<group>"; };
 		0434F4AD2D75744000247D8B /* CaptureProtection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureProtection.swift; sourceTree = "<group>"; };
+		0434F4B52D758C2D00247D8B /* utils */ = {isa = PBXFileReference; lastKnownFileType = folder; path = utils; sourceTree = "<group>"; };
+		0434F4B62D758C3100247D8B /* constants */ = {isa = PBXFileReference; lastKnownFileType = folder; path = constants; sourceTree = "<group>"; };
 		134814201AA4EA6300B7C361 /* libCaptureProtection.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCaptureProtection.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -52,6 +54,8 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				0434F4B52D758C2D00247D8B /* utils */,
+				0434F4B62D758C3100247D8B /* constants */,
 				0434F4AD2D75744000247D8B /* CaptureProtection.swift */,
 				0434F4A12D756B8300247D8B /* CaptureProtection.m */,
 				0434F4A52D756BAA00247D8B /* CaptureProtection-Bridging-Header.h */,
