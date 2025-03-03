@@ -4,7 +4,7 @@ buildscript {
   // module dependency in an application project.
   if (project == rootProject) {
     ext {
-      kotlinVersion = '1.8.0'
+      kotlinVersion = rootProject.ext.has("kotlinVersion") ? rootProject.ext.kotlinVersion : "1.8.0"
     }
     repositories {
       google()
@@ -13,7 +13,7 @@ buildscript {
 
     dependencies {
       classpath 'com.android.tools.build:gradle:3.5.3'
-      classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${project.ext.kotlinVersion}"
+      classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${rootProject.ext.kotlinVersion}"
     }
   }
 }
