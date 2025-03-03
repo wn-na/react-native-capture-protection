@@ -19,9 +19,7 @@ import com.captureprotection.constants.StatusCode
 import com.captureprotection.utils.ModuleThread
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
-import java.lang.reflect.Proxy
 import java.util.ArrayList
 
 open class CaptureProtectionLifecycleListener(
@@ -29,6 +27,7 @@ open class CaptureProtectionLifecycleListener(
 ) : ReactContextBaseJavaModule(reactContext), LifecycleEventListener {
 
     override fun getName() = Constants.NAME
+
     val displayManager: DisplayManager =
             reactContext.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
     val displayListener: DisplayManager.DisplayListener
@@ -65,42 +64,13 @@ open class CaptureProtectionLifecycleListener(
             return
         }
         try {
-            for (clazz in Activity::class.java.declaredClasses) {
-                if (clazz.simpleName == "ScreenCaptureCallback") {
-                    val dynamic =
-                            Proxy.newProxyInstance(
-                                    clazz.classLoader,
-                                    arrayOf(clazz),
-                                    InvocationHandler { proxy, m, args ->
-                                        if (m.name == "onScreenCaptured") {
-                                            try {
-                                                Log.d(
-                                                        Constants.NAME,
-                                                        "=> capture onScreenCaptured add event "
-                                                )
-                                                val flags = isSecureFlag()
-                                                sendEvent(
-                                                        Constants.LISTENER_EVENT_NAME,
-                                                        flags,
-                                                        flags,
-                                                        StatusCode.CAPTURE_DETECTED.ordinal
-                                                )
-                                            } catch (e: Exception) {
-                                                Log.e(
-                                                        Constants.NAME,
-                                                        "onScreenCaptured has raise Exception: " +
-                                                                e.localizedMessage
-                                                )
-                                            }
-                                            return@InvocationHandler null
-                                        }
-                                        m.invoke(proxy, *args)
-                                    }
-                            )
-                    CaptureProtectionLifecycleListener.screenCaptureCallback = dynamic
-                    break
-                }
-            }
+            CaptureProtectionLifecycleListener.screenCaptureCallback =
+                    Reflection.createScreenCaptureCallback {
+                        sendEvent(
+                                Constants.LISTENER_EVENT_NAME,
+                                StatusCode.CAPTURE_DETECTED.ordinal
+                        )
+                    }
         } catch (e: Exception) {
             Log.e(
                     Constants.NAME,
@@ -119,11 +89,8 @@ open class CaptureProtectionLifecycleListener(
                                 screens.add(displayId)
                             }
                             try {
-                                val flags = isSecureFlag()
                                 sendEvent(
                                         Constants.LISTENER_EVENT_NAME,
-                                        flags,
-                                        flags,
                                         if (screens.isEmpty()) StatusCode.UNKNOWN.ordinal
                                         else StatusCode.RECORD_DETECTED_START.ordinal
                                 )
@@ -144,11 +111,8 @@ open class CaptureProtectionLifecycleListener(
                                 screens.removeAt(index)
                             }
                             try {
-                                val flags = isSecureFlag()
                                 sendEvent(
                                         Constants.LISTENER_EVENT_NAME,
-                                        flags,
-                                        flags,
                                         if (screens.isNotEmpty())
                                                 StatusCode.RECORD_DETECTED_START.ordinal
                                         else StatusCode.RECORD_DETECTED_END.ordinal
@@ -178,6 +142,7 @@ open class CaptureProtectionLifecycleListener(
                 if (CaptureProtectionLifecycleListener.screenCaptureCallback == null) {
                     createCaptureCallback()
                 }
+
                 registerScreenCaptureCallback.invoke(
                         getReactCurrentActivity(),
                         ModuleThread.MainExecutor,
@@ -185,7 +150,8 @@ open class CaptureProtectionLifecycleListener(
                 )
             }
         } catch (e: Exception) {
-            Log.e(Constants.NAME, "onHostResume has raise Exception: " + e.localizedMessage)
+            e.printStackTrace()
+            Log.e(Constants.NAME, "onHostResume has raise Exception: " + e.message)
         }
     }
 
@@ -220,13 +186,9 @@ open class CaptureProtectionLifecycleListener(
                 .emit(eventName, params)
     }
 
-    fun sendEvent(
-            eventName: String,
-            preventRecord: Boolean,
-            preventScreenshot: Boolean,
-            status: Int
-    ) {
-        val params = Response.createPreventWithStatusMap(status, preventScreenshot, preventRecord)
+    fun sendEvent(eventName: String, status: Int) {
+        val flag = isSecureFlag()
+        val params = Response.createPreventWithStatusMap(status, flag, flag)
         sendEvent(eventName, params)
     }
 
@@ -322,11 +284,8 @@ open class CaptureProtectionLifecycleListener(
                                                         Constants.NAME,
                                                         "CaptureProtectionLifecycleListener.contentObserver detect screenshot file$path"
                                                 )
-                                                val flags = isSecureFlag()
                                                 sendEvent(
                                                         Constants.LISTENER_EVENT_NAME,
-                                                        flags,
-                                                        flags,
                                                         StatusCode.CAPTURE_DETECTED.ordinal
                                                 )
                                             }

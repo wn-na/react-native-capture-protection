@@ -35,12 +35,11 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   fun hasListener(promise: Promise) {
     currentActivity?.runOnUiThread {
       try {
-        val params =
-                Response.createPreventMap(
-                        CaptureProtectionLifecycleListener.contentObserver != null ||
-                                super.getScreenCaptureCallback() != null,
-                        super.displayListener != null
-                )
+        val screenshotListener =
+                CaptureProtectionLifecycleListener.contentObserver != null ||
+                        super.getScreenCaptureCallback() != null
+        val recordListener = super.displayListener != null
+        val params = Response.createPreventMap(screenshotListener, recordListener)
         promise.resolve(params)
       } catch (e: Exception) {
         promise.reject("hasListener", e)
@@ -68,7 +67,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
           Log.w(Constants.NAME, "preventScreenshot: Current Activity is null")
         } else {
           currentActivity.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-          super.sendEvent(Constants.LISTENER_EVENT_NAME, true, true, StatusCode.UNKNOWN.ordinal)
+          super.sendEvent(Constants.LISTENER_EVENT_NAME, StatusCode.UNKNOWN.ordinal)
           super.addListener()
           promise.resolve(true)
         }
@@ -87,7 +86,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
           Log.w(Constants.NAME, "allowScreenshot: Current Activity is null")
         } else {
           currentActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-          super.sendEvent(Constants.LISTENER_EVENT_NAME, false, false, StatusCode.UNKNOWN.ordinal)
+          super.sendEvent(Constants.LISTENER_EVENT_NAME, StatusCode.UNKNOWN.ordinal)
           if (removeListener) {
             super.removeListener()
           }
