@@ -7,17 +7,16 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 
-class Reflection() {
+class Reflection {
     companion object {
         private val NAME = "${Constants.NAME}_Reflection"
-        fun getMethod(c: Class<*>?, name: String): Method? {
+        fun getMethod(c: Class<*>?, methodName: String): Method? {
             return try {
                 generateSequence(c) { it.superclass }
                         .flatMap { it.declaredMethods.asSequence() }
-                        .firstOrNull { it.name == name }
-                        ?.apply { Log.d(NAME, "found function: $name") }
+                        .firstOrNull { it.name == methodName }
             } catch (e: Exception) {
-                Log.e(NAME, "Exception: ${e.localizedMessage}")
+                Log.e(NAME, "Exception: ${methodName} -> ${e.localizedMessage}")
                 null
             }
         }
@@ -54,7 +53,6 @@ class Reflection() {
                             }
                             return@InvocationHandler null
                         }
-                        // method.invoke(proxy, *args)
 
                         when (method.returnType) {
                             Boolean::class.javaPrimitiveType -> return@InvocationHandler false

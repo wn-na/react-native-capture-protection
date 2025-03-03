@@ -1,6 +1,5 @@
 package com.captureprotection
 
-import android.util.Log
 import android.view.WindowManager
 import com.captureprotection.constants.Constants
 import com.captureprotection.constants.StatusCode
@@ -13,33 +12,33 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
 
   @ReactMethod
   fun addListener(eventName: String) {
-    super.addListener()
+    super.addScreenCaptureListener()
   }
 
   @ReactMethod
   fun removeListeners(count: Int) {
-    super.removeListener()
+    super.removeScreenCaptureListener()
   }
 
   @ReactMethod
   fun addScreenshotListener() {
-    super.addListener()
+    super.addScreenCaptureListener()
   }
 
   @ReactMethod
   fun removeScreenshotListener() {
-    super.removeListener()
+    super.removeScreenCaptureListener()
   }
 
   @ReactMethod
   fun hasListener(promise: Promise) {
     currentActivity?.runOnUiThread {
       try {
-        val screenshotListener =
-                CaptureProtectionLifecycleListener.contentObserver != null ||
-                        super.getScreenCaptureCallback() != null
-        val recordListener = super.displayListener != null
-        val params = Response.createPreventMap(screenshotListener, recordListener)
+        val params =
+                Response.createPreventMap(
+                        super.hasScreenCaptureListener(),
+                        super.hasScreenRecordListener()
+                )
         promise.resolve(params)
       } catch (e: Exception) {
         promise.reject("hasListener", e)
@@ -62,15 +61,11 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   fun preventScreenshot(promise: Promise) {
     currentActivity?.runOnUiThread {
       try {
-        val currentActivity = super.getReactCurrentActivity()
-        if (currentActivity == null) {
-          Log.w(Constants.NAME, "preventScreenshot: Current Activity is null")
-        } else {
-          currentActivity.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-          super.sendEvent(Constants.LISTENER_EVENT_NAME, StatusCode.UNKNOWN.ordinal)
-          super.addListener()
-          promise.resolve(true)
-        }
+        val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
+        currentActivity!!.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, StatusCode.UNKNOWN.ordinal)
+        super.addScreenCaptureListener()
+        promise.resolve(true)
       } catch (e: Exception) {
         promise.reject("preventScreenshot", e)
       }
@@ -81,17 +76,13 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   fun allowScreenshot(removeListener: Boolean, promise: Promise) {
     currentActivity?.runOnUiThread {
       try {
-        val currentActivity = super.getReactCurrentActivity()
-        if (currentActivity == null) {
-          Log.w(Constants.NAME, "allowScreenshot: Current Activity is null")
-        } else {
-          currentActivity.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-          super.sendEvent(Constants.LISTENER_EVENT_NAME, StatusCode.UNKNOWN.ordinal)
-          if (removeListener) {
-            super.removeListener()
-          }
-          promise.resolve(true)
+        val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
+        currentActivity!!.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, StatusCode.UNKNOWN.ordinal)
+        if (removeListener) {
+          super.removeScreenCaptureListener()
         }
+        promise.resolve(true)
       } catch (e: Exception) {
         promise.reject("allowScreenshot", e)
       }
@@ -102,7 +93,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   fun getPreventStatus(promise: Promise) {
     currentActivity?.runOnUiThread {
       try {
-        val flags = super.isSecureFlag()
+        val flags = ActivityUtils.isSecureFlag(reactContext)
         val statusMap = Response.createPreventMap(flags, flags)
         promise.resolve(statusMap)
       } catch (e: Exception) {
