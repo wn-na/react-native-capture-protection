@@ -21,6 +21,15 @@
 npm install react-native-capture-protection
 ```
 
+- Expo
+
+> Only Expo Dev client compatible
+> This library has native code, so it's not work for Expo Go but it's compatible with custom dev client.
+
+```
+npx expo install react-native-capture-protection
+```
+
 ```js
 import {
   CaptureProtection,
