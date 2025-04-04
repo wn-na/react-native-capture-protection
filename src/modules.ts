@@ -26,12 +26,16 @@ const allow: CaptureProtectionFunction['allow'] = async (option) => {
   }
   if (Platform.OS === 'ios') {
     const {
-      record = true,
-      appSwitcher = true,
-      screenShot = true,
-    } = option ?? {};
+      record = false,
+      appSwitcher = false,
+      screenshot = false,
+    } = option ?? {
+      record: true,
+      appSwitcher: true,
+      screenshot: true,
+    };
 
-    if (screenShot) {
+    if (screenshot) {
       await CaptureProtectionIOSModule?.allowScreenShot?.();
     }
 
@@ -51,12 +55,16 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
   }
   if (Platform.OS === 'ios') {
     const {
-      record = true,
-      appSwitcher = true,
-      screenShot = true,
-    } = option ?? {};
+      record = false,
+      appSwitcher = false,
+      screenshot = false,
+    } = option ?? {
+      record: true,
+      appSwitcher: true,
+      screenshot: true,
+    };
 
-    if (screenShot) {
+    if (screenshot) {
       await CaptureProtectionIOSModule?.preventScreenShot?.();
     }
 
@@ -101,13 +109,13 @@ const protectionStatus: CaptureProtectionFunction['protectionStatus'] =
       return {
         record: status,
         appSwitcher: status,
-        screenShot: status,
+        screenshot: status,
       };
     }
     if (Platform.OS === 'ios') {
       return await CaptureProtectionIOSModule?.protectionStatus?.();
     }
-    return { record: undefined, appSwitcher: undefined, screenShot: undefined };
+    return { record: undefined, appSwitcher: undefined, screenshot: undefined };
   };
 
 const hasListener: CaptureProtectionFunction['hasListener'] = async () => {

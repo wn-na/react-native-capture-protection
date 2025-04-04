@@ -4,10 +4,15 @@ export enum CaptureEventType {
   END_RECORDING,
   CAPTURED,
   APP_SWITCHING,
+  UNKNOWN,
+  ALLOW = 8,
+  PREVENT_SCREEN_CAPTURE = 16,
+  PREVENT_SCREEN_RECORDING = 32,
+  PREVENT_SCREEN_APP_SWITCHING = 64,
 }
 
 export type CaptureProtectionModuleStatus = {
-  screenShot?: boolean;
+  screenshot?: boolean;
   record?: boolean;
   appSwitcher?: boolean;
 };
@@ -25,13 +30,13 @@ export type IOSProtectionScreenOption =
   | IOSProtectionCustomScreenOption;
 
 export type PreventOption = {
-  screenShot?: boolean;
+  screenshot?: boolean;
   record?: boolean | IOSProtectionScreenOption;
   appSwitcher?: boolean | IOSProtectionScreenOption;
 };
 
 export type AllowOption = {
-  screenShot?: boolean;
+  screenshot?: boolean;
   record?: boolean;
   appSwitcher?: boolean;
 };
@@ -79,6 +84,6 @@ export interface CaptureProtectionFunction {
 export type CaptureProtectionContextType = {
   protectionStatus: CaptureProtectionModuleStatus;
   status: CaptureEventType;
-  prevent: () => Promise<void>;
-  allow: () => Promise<void>;
+  prevent: (option?: PreventOption) => Promise<void>;
+  allow: (option?: AllowOption) => Promise<void>;
 };

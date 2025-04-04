@@ -1,30 +1,43 @@
 import { useEffect, useState } from 'react';
 import { CaptureProtection } from './modules';
-import { CaptureEventType } from './type';
+import { CaptureEventType, CaptureProtectionModuleStatus } from './type';
 
-const useCaptureDetection = (option?: { delay?: number }) => {
+const useCaptureDetection = () => {
   const [status, setStatus] = useState<CaptureEventType>(CaptureEventType.NONE);
+  const [protectionStatus, setProtectionStatus] =
+    useState<CaptureProtectionModuleStatus>({
+      screenshot: false,
+      record: false,
+      appSwitcher: false,
+    });
 
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
     CaptureProtection.addListener((eventType) => {
-      setStatus(eventType);
-      if (eventType === CaptureEventType.CAPTURED) {
-        timer = setTimeout(
-          () => setStatus(CaptureEventType.NONE),
-          option?.delay || 1000
-        );
+      if (eventType < CaptureEventType.ALLOW) {
+        setStatus(eventType);
+      } else if (eventType === CaptureEventType.ALLOW) {
+        setProtectionStatus((_) => ({
+          screenshot: false,
+          record: false,
+          appSwitcher: false,
+        }));
+      } else if (eventType > CaptureEventType.ALLOW) {
+        setProtectionStatus((prev) => ({
+          ...prev,
+          screenshot: !!(eventType & CaptureEventType.PREVENT_SCREEN_CAPTURE),
+          record: !!(eventType & CaptureEventType.PREVENT_SCREEN_RECORDING),
+          appSwitcher: !!(
+            eventType & CaptureEventType.PREVENT_SCREEN_APP_SWITCHING
+          ),
+        }));
       }
     });
     return () => {
       CaptureProtection.removeListener();
-      if (timer) {
-        clearTimeout(timer);
-      }
     };
-  }, [option?.delay]);
+  }, []);
 
-  return { status };
+  return { status, protectionStatus };
 };
 
 export { useCaptureDetection };
