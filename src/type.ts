@@ -45,13 +45,19 @@ export interface CaptureProtectionIOSNativeModules {
   allowScreenShot: () => Promise<void>;
   preventScreenShot: () => Promise<void>;
   allowScreenRecord: () => Promise<void>;
-  preventScreenRecord: (
-    option?: IOSProtectionCustomScreenOption
+  preventScreenRecord: () => Promise<void>;
+  preventScreenRecordWithText: (
+    text: string,
+    textColor?: `#${string}`,
+    backgroundColor?: `#${string}`
   ) => Promise<void>;
   preventScreenRecordWithImage: (image: NodeRequire) => Promise<void>;
   allowAppSwitcher: () => Promise<void>;
-  preventAppSwitcher: (
-    option?: IOSProtectionCustomScreenOption
+  preventAppSwitcher: () => Promise<void>;
+  preventAppSwitcherWithText: (
+    text: string,
+    textColor?: `#${string}`,
+    backgroundColor?: `#${string}`
   ) => Promise<void>;
   preventAppSwitcherWithImage: (image: NodeRequire) => Promise<void>;
   hasListener: () => Promise<boolean>;

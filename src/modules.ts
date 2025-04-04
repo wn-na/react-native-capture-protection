@@ -3,7 +3,6 @@ import {
   CaptureProtectionAndroidNativeModules,
   CaptureProtectionFunction,
   CaptureProtectionIOSNativeModules,
-  IOSProtectionCustomScreenOption,
 } from './type';
 
 const CaptureProtectionModule = NativeModules?.CaptureProtection ?? {};
@@ -74,11 +73,13 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
       } else if (typeof appSwitcher === 'object') {
         if ('image' in appSwitcher) {
           await CaptureProtectionIOSModule?.preventAppSwitcherWithImage?.(
-            (appSwitcher as any).image
+            appSwitcher.image
           );
         } else {
-          await CaptureProtectionIOSModule?.preventAppSwitcher?.(
-            appSwitcher as IOSProtectionCustomScreenOption
+          await CaptureProtectionIOSModule?.preventAppSwitcherWithText?.(
+            appSwitcher.text,
+            appSwitcher?.textColor,
+            appSwitcher?.backgroundColor
           );
         }
       }
@@ -90,11 +91,13 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
       } else if (typeof record === 'object') {
         if ('image' in record) {
           await CaptureProtectionIOSModule?.preventScreenRecordWithImage?.(
-            (record as any).image
+            record.image
           );
         } else {
-          await CaptureProtectionIOSModule?.preventScreenRecord?.(
-            record as IOSProtectionCustomScreenOption
+          await CaptureProtectionIOSModule?.preventScreenRecordWithText?.(
+            record.text,
+            record?.textColor,
+            record?.backgroundColor
           );
         }
       }
