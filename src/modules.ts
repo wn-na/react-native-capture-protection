@@ -12,10 +12,11 @@ const CaptureProtectionAndroidModule =
 const CaptureProtectionIOSModule =
   CaptureProtectionModule as CaptureProtectionIOSNativeModules;
 
-const CaptureNotificationEmitter =
-  Platform.OS === 'ios' || Platform.OS === 'android'
-    ? new NativeEventEmitter(CaptureProtectionModule)
-    : undefined;
+const isPlatformSupported = Platform.OS === 'ios' || Platform.OS === 'android';
+
+const CaptureNotificationEmitter = isPlatformSupported
+  ? new NativeEventEmitter(CaptureProtectionModule)
+  : undefined;
 
 const CaptureProtectionEventType = 'CaptureProtectionListener' as const;
 
@@ -132,24 +133,25 @@ const hasListener: CaptureProtectionFunction['hasListener'] = async () => {
 };
 
 const addListener: CaptureProtectionFunction['addListener'] = (callback) => {
-  if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
+  if (!isPlatformSupported) {
     return;
   }
-  CaptureNotificationEmitter?.addListener?.(
+  return CaptureNotificationEmitter?.addListener?.(
     CaptureProtectionEventType,
     callback
   );
 };
 
-const removeListener: CaptureProtectionFunction['removeListener'] =
-  async () => {
-    if (Platform.OS !== 'ios' && Platform.OS !== 'android') {
-      return;
-    }
-    CaptureNotificationEmitter?.removeAllListeners?.(
-      CaptureProtectionEventType
-    );
-  };
+const removeListener: CaptureProtectionFunction['removeListener'] = async (
+  emitter
+) => {
+  if (!isPlatformSupported) {
+    return;
+  }
+  if (emitter) {
+    emitter.remove();
+  }
+};
 
 const isScreenRecording: CaptureProtectionFunction['isScreenRecording'] =
   async () => {
@@ -164,19 +166,19 @@ const isScreenRecording: CaptureProtectionFunction['isScreenRecording'] =
 
 const requestPermission: CaptureProtectionFunction['requestPermission'] =
   async () => {
-    if (Platform.OS === 'android') {
-      try {
-        return await CaptureProtectionAndroidModule?.requestPermission?.();
-      } catch (e) {
-        console.error(
-          '[react-native-capture-protection] requestPermission throw error',
-          e
-        );
-        return false;
-      }
-    } else {
+    if (Platform.OS !== 'android') {
       console.warn(
         '[react-native-capture-protection] requestPermission is only available on Android'
+      );
+      return false;
+    }
+
+    try {
+      return await CaptureProtectionAndroidModule?.requestPermission?.();
+    } catch (e) {
+      console.error(
+        '[react-native-capture-protection] requestPermission throw error',
+        e
       );
       return false;
     }

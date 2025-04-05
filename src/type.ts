@@ -1,3 +1,5 @@
+import { EmitterSubscription } from 'react-native';
+
 export enum CaptureEventType {
   NONE,
   RECORDING,
@@ -41,6 +43,8 @@ export type AllowOption = {
   appSwitcher?: boolean;
 };
 
+export type CaptureEventCallback = (eventType: CaptureEventType) => void;
+
 export interface CaptureProtectionIOSNativeModules {
   allowScreenShot: () => Promise<void>;
   preventScreenShot: () => Promise<void>;
@@ -79,8 +83,10 @@ export interface CaptureProtectionFunction {
   prevent: (option?: PreventOption) => void;
   /** If no option is specified, all actions are allow */
   allow: (option?: AllowOption) => void;
-  addListener: (callback: (eventType: CaptureEventType) => void) => void;
-  removeListener: () => void;
+  addListener: (
+    callback: CaptureEventCallback
+  ) => EmitterSubscription | undefined;
+  removeListener: (emitter: EmitterSubscription) => void;
   hasListener: () => Promise<boolean | undefined>;
   protectionStatus: () => Promise<CaptureProtectionModuleStatus>;
   isScreenRecording: () => Promise<boolean | undefined>;

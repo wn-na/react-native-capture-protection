@@ -12,7 +12,7 @@ const useCaptureDetection = () => {
     });
 
   useEffect(() => {
-    CaptureProtection.addListener((eventType) => {
+    const listener = CaptureProtection.addListener((eventType) => {
       if (eventType < CaptureEventType.ALLOW) {
         setStatus(eventType);
       } else if (eventType === CaptureEventType.ALLOW) {
@@ -33,7 +33,7 @@ const useCaptureDetection = () => {
       }
     });
     return () => {
-      CaptureProtection.removeListener();
+      listener?.remove?.();
     };
   }, []);
 
