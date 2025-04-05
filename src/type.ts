@@ -80,9 +80,9 @@ export interface CaptureProtectionAndroidNativeModules {
 
 export interface CaptureProtectionFunction {
   /** If no option is specified, all actions are prevent */
-  prevent: (option?: PreventOption) => void;
+  prevent: (option?: PreventOption) => Promise<void>;
   /** If no option is specified, all actions are allow */
-  allow: (option?: AllowOption) => void;
+  allow: (option?: AllowOption) => Promise<void>;
   addListener: (
     callback: CaptureEventCallback
   ) => EmitterSubscription | undefined;
@@ -96,6 +96,6 @@ export interface CaptureProtectionFunction {
 export type CaptureProtectionContextType = {
   protectionStatus: CaptureProtectionModuleStatus;
   status: CaptureEventType;
-  prevent: (option?: PreventOption) => Promise<void>;
-  allow: (option?: AllowOption) => Promise<void>;
+  prevent: CaptureProtectionFunction['prevent'];
+  allow: CaptureProtectionFunction['allow'];
 };

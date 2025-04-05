@@ -9,15 +9,17 @@
 import Foundation
 
 public class Constants {
-    public enum CaptureProtectionStatus: Int {
-        case INIT_RECORD_LISTENER = 0
-        case REMOVE_RECORD_LISTENER = 1
-        case RECORD_LISTENER_NOT_EXIST = 2
-        case RECORD_LISTENER_EXIST = 3
-        case RECORD_DETECTED_START = 4
-        case RECORD_DETECTED_END = 5
-        case CAPTURE_DETECTED = 6
-        case UNKNOWN = 7
+    public enum CaptureEventType: Int {
+        case NONE = 0
+        case RECORDING = 1
+        case END_RECORDING = 2
+        case CAPTURED = 3
+        case APP_SWITCHING = 4
+        case UNKNOWN = 5
+        case ALLOW = 8
+        case PREVENT_SCREEN_CAPTURE = 16
+        case PREVENT_SCREEN_RECORDING = 32
+        case PREVENT_SCREEN_APP_SWITCHING = 64
     }
     
     static let TAG_RECORD_PROTECTION_SCREEN = -1002

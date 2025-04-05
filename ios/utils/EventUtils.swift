@@ -10,13 +10,5 @@ import UIKit
 import Foundation
 
 public class EventUtils {
-    public static func eventMessage(status: Constants.CaptureProtectionStatus, isPreventScreenshot: Bool, isPreventScreenRecord: Bool) -> [String: Any] {
-        return [
-            "status": status.rawValue,
-            "isPrevent": [
-                "screenshot": isPreventScreenshot,
-                "record": isPreventScreenRecord
-            ]
-        ]
-    }
+    public static func eventMessage() {}
 }
