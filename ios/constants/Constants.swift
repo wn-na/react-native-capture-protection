@@ -21,7 +21,14 @@ public class Constants {
         case PREVENT_SCREEN_RECORDING = 32
         case PREVENT_SCREEN_APP_SWITCHING = 64
     }
+
+    public enum CaptureProtectionType: Int {
+        case NONE = 0
+        case TEXT = 1
+        case IMAGE = 2
+    }
     
     static let TAG_RECORD_PROTECTION_SCREEN = -1002
-    static let TAG_SCREEN_PROTECTION = -1004
+    static let TAG_SCREENSHOT_PROTECTION = -1004
+    static let TAG_APP_SWITCHER_PROTECTION = -1005
 }
