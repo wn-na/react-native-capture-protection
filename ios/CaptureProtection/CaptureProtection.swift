@@ -1,3 +1,10 @@
+//
+//  CaptureProtection.swift
+//
+//
+//  Created by lethe(wn-na, lecheln00@gmail.com) on 4/6/25.
+//
+
 import React
 import UIKit
 import Foundation
@@ -446,17 +453,17 @@ class CaptureProtection: RCTEventEmitter {
             DispatchQueue.main.async { [self] in
                 let config = protectionViewConfig.screenRecord
                 if config.type == Constants.CaptureProtectionType.TEXT {
-                    protectionViewConfig.screenRecord.viewController = createTextView(
+                    protectionViewConfig.screenRecord.viewController = UIViewUtils.textView(
                         tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
                         text: config.text!,
                         textColor: config.textColor,
                         backgroundColor: config.backgroundColor)
                 } else if config.type == Constants.CaptureProtectionType.IMAGE {
-                    protectionViewConfig.screenRecord.viewController = createImageView(
+                    protectionViewConfig.screenRecord.viewController = UIViewUtils.imageView(
                         tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
                         image: config.image!)
                 } else {
-                    protectionViewConfig.screenRecord.viewController = createView(
+                    protectionViewConfig.screenRecord.viewController = UIViewUtils.view(
                         tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
                         backgroundColor: config.backgroundColor
                     )
@@ -469,13 +476,7 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     private func removeScreenRecordView() {
-        DispatchQueue.main.async { [self] in
-            if let existingController = protectionViewConfig.screenRecord.viewController {
-                existingController.willMove(toParent: nil)
-                existingController.view.removeFromSuperview()
-                existingController.removeFromParent()
-            }
-        }
+        UIViewUtils.remove(viewController: protectionViewConfig.screenRecord.viewController)
     }
     // -------------------------------------------------------------------------
     
@@ -486,11 +487,11 @@ class CaptureProtection: RCTEventEmitter {
             DispatchQueue.main.async { [self] in
                 let config = protectionViewConfig.appSwitcher
                 if config.type == Constants.CaptureProtectionType.TEXT {
-                    protectionViewConfig.appSwitcher.viewController = createTextView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, text: config.text!, textColor: config.textColor, backgroundColor: config.backgroundColor)
+                    protectionViewConfig.appSwitcher.viewController = UIViewUtils.textView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, text: config.text!, textColor: config.textColor, backgroundColor: config.backgroundColor)
                 } else if config.type == Constants.CaptureProtectionType.IMAGE {
-                    protectionViewConfig.appSwitcher.viewController = createImageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!)
+                    protectionViewConfig.appSwitcher.viewController = UIViewUtils.imageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!)
                 } else {
-                    protectionViewConfig.appSwitcher.viewController = createView(
+                    protectionViewConfig.appSwitcher.viewController = UIViewUtils.view(
                         tag: Constants.TAG_APP_SWITCHER_PROTECTION,
                         backgroundColor: config.backgroundColor
                     )
@@ -503,71 +504,7 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     private func removeAppSwitcherView() {
-        DispatchQueue.main.async { [self] in
-            if let existingController = protectionViewConfig.appSwitcher.viewController {
-                existingController.willMove(toParent: nil)
-                existingController.view.removeFromSuperview()
-                existingController.removeFromParent()
-            }
-        }
+        UIViewUtils.remove(viewController: protectionViewConfig.appSwitcher.viewController)
     }
     // -------------------------------------------------------------------------
-    
-    // -------------------------------------------------------------------------
-    func createImageView(tag: Int, image: UIImage) -> UIViewController  {
-        guard let window = UIApplication.shared.delegate?.window ?? nil else { return UIViewController() }
-        
-        let viewController = UIViewController()
-        viewController.view.tag = tag
-        
-        let imageView = UIImageView(image: image)
-        imageView.frame = window.frame
-        imageView.clipsToBounds = true
-        imageView.contentMode = .scaleAspectFit
-        
-        viewController.view.addSubview(imageView)
-        viewController.view.backgroundColor = .white
-        
-        return viewController
-    }
-    
-    func createTextView(tag: Int, text: String,
-                        textColor: String,
-                        backgroundColor: String) -> UIViewController {
-        guard let window = UIApplication.shared.delegate?.window ?? nil else { return UIViewController()  }
-        
-        let viewController = UIViewController()
-        viewController.view.tag = tag
-        viewController.view.backgroundColor = TextUtils.colorFromHexString(hexString: backgroundColor, defaultColor: .white)
-        
-        let label = UILabel()
-        label.textAlignment = .center
-        label.textColor = TextUtils.colorFromHexString(hexString: textColor)
-        label.isUserInteractionEnabled = false
-        label.text = text
-        label.frame = window.frame
-        
-        viewController.view.addSubview(label)
-        return viewController
-    }
-    
-    func createView(tag: Int , backgroundColor: String) -> UIViewController {
-        guard (UIApplication.shared.delegate?.window ?? nil) != nil else { return UIViewController() }
-        
-        let viewController = UIViewController()
-        viewController.view.tag = tag
-        viewController.view.backgroundColor = TextUtils.colorFromHexString(hexString: backgroundColor, defaultColor: .white)
-        return viewController
-    }
-    
-//    private func removeRecordProtectionScreen() {
-//        DispatchQueue.main.async {
-//            guard let window = UIApplication.shared.delegate?.window else { return }
-//            if let existingViewController = window?.viewWithTag(Constants.TAG_RECORD_PROTECTION_SCREEN)?.next as? UIViewController {
-//                existingViewController.willMove(toParent: nil)
-//                existingViewController.view.removeFromSuperview()
-//                existingViewController.removeFromParent()
-//            }
-//        }
-//    }
 }

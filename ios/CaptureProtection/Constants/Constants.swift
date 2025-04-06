@@ -1,8 +1,5 @@
 //
-//  StatusCode.swift
-//  CaptureProtection
-//
-//  Created by lethe on 3/3/25.
+//  Created by lethe(wn-na, lecheln00@gmail.com) on 3/3/25.
 //  Copyright © 2025 Facebook. All rights reserved.
 //
 
