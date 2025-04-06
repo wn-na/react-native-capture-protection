@@ -24,6 +24,13 @@ class CaptureProtection: RCTEventEmitter {
             addBundleReloadObserver()
         }
     }
+
+    deinit {
+        removeScreenshotObserver()
+        removeScreenRecordObserver()
+        removeBackgroundObserver()
+        removeBundleReloadObserver()
+    }
     
     // MARK: - React Native Module Function
     @objc(supportedEvents)
@@ -311,6 +318,10 @@ class CaptureProtection: RCTEventEmitter {
             self!.protectionViewConfig = ProtectionViewConfig()
             self!.config = CaptureProtectionConfig()
         }
+    }
+
+    private func removeBundleReloadObserver() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.RCTBridgeWillReload, object: nil)
     }
     
     // MARK: - Protection UI with ScreenShot
