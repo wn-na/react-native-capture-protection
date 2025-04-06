@@ -230,7 +230,7 @@ class CaptureProtection: RCTEventEmitter {
             } else {
                 removeScreenRecordView()
                 if !isEvent {
-                    sendListener(status: Constants.CaptureEventType.END_RECORDING.rawValue)
+                    triggerEvent(Constants.CaptureEventType.END_RECORDING)
                 }
             }
         }
