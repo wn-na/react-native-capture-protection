@@ -9,54 +9,12 @@ import React
 import UIKit
 import Foundation
 
-struct ProtectionConfig {
-    var screenshot: Bool = false
-    var screenRecord: Bool = false
-    var appSwitcher: Bool = false
-}
-
-struct CaptureProtectionConfig {
-    var prevent = ProtectionConfig()
-    var observer = ProtectionConfig()
-}
-
-struct ProtectorViewOption {
-    var viewController: UIViewController?
-    var text: String?
-    var textColor: String = "#000000"
-    var backgroundColor: String = "#FFFFFF"
-    var image: UIImage?
-    var type: Constants.CaptureProtectionType = Constants.CaptureProtectionType.NONE
-}
-
-struct ProtectionViewConfig {
-    var secureTextField: UITextField?
-    var screenRecord = ProtectorViewOption()
-    var appSwitcher = ProtectorViewOption()
-}
-
 @objc(CaptureProtection)
 class CaptureProtection: RCTEventEmitter {
     private var hasListeners = false
     private var config = CaptureProtectionConfig()
     private var protectionViewConfig = ProtectionViewConfig()
     
-    // -------------------------------------------------------------------------
-    func getPreventStatus() -> Int {
-        let result =
-        (config.prevent.screenshot ? Constants.CaptureEventType.PREVENT_SCREEN_CAPTURE.rawValue : 0)
-        + (config.prevent.screenRecord ? Constants.CaptureEventType.PREVENT_SCREEN_RECORDING.rawValue : 0)
-        + (config.prevent.appSwitcher ? Constants.CaptureEventType.PREVENT_SCREEN_APP_SWITCHING.rawValue : 0)
-        
-        if result == 0 {
-            return Constants.CaptureEventType.ALLOW.rawValue
-        }
-        return result
-    }
-    // -------------------------------------------------------------------------
-    
-    
-    // -------------------------------------------------------------------------
     override init() {
         super.init()
         DispatchQueue.main.async { [self] in
@@ -66,8 +24,8 @@ class CaptureProtection: RCTEventEmitter {
             addBundleReloadObserver()
         }
     }
-    // -------------------------------------------------------------------------
     
+    // MARK: - React Native Module Function
     @objc(supportedEvents)
     override func supportedEvents() -> [String] {
         ["CaptureProtectionListener"]
@@ -89,7 +47,6 @@ class CaptureProtection: RCTEventEmitter {
         hasListeners = false
     }
     
-    // ScreenShot
     @objc func allowScreenShot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             secureScreenshot(isSecure: false)
@@ -116,7 +73,6 @@ class CaptureProtection: RCTEventEmitter {
         }
     }
     
-    // Screen Record
     @objc func allowScreenRecord(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             config.prevent.screenRecord = false
@@ -194,7 +150,6 @@ class CaptureProtection: RCTEventEmitter {
         }
     }
     
-    // App Switcher
     @objc func allowAppSwitcher(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         config.prevent.appSwitcher = false
         removeAppSwitcherView()
@@ -265,7 +220,6 @@ class CaptureProtection: RCTEventEmitter {
         }
     }
     
-    // Etc
     @objc func hasListener(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         resolver(hasListeners)
     }
@@ -286,9 +240,8 @@ class CaptureProtection: RCTEventEmitter {
         }
     }
     
-    // -------------------------------------------------------------------------
+    // MARK: - Send Event Listener
     
-    // -------------------------------------------------------------------------
     func triggerEvent(_ event: Constants.CaptureEventType) {
         if hasListeners {
             self.sendEvent(
@@ -312,9 +265,7 @@ class CaptureProtection: RCTEventEmitter {
             }
         }
     }
-    // -------------------------------------------------------------------------
     
-    // -------------------------------------------------------------------------
     @objc func eventScreenshot(notification: Notification) {
         self.triggerEvent(Constants.CaptureEventType.CAPTURED)
     }
@@ -346,9 +297,8 @@ class CaptureProtection: RCTEventEmitter {
         }
         eventScreenRecord(notification: Notification(name: Notification.Name("Init")), isEvent: true)
     }
-    // -------------------------------------------------------------------------
     
-    // -------------------------------------------------------------------------
+    // MARK: - Observer
     private func addScreenshotObserver() {
         guard !config.observer.screenshot else { return }
         config.observer.screenshot = true
@@ -424,9 +374,8 @@ class CaptureProtection: RCTEventEmitter {
             self!.config = CaptureProtectionConfig()
         }
     }
-    // -------------------------------------------------------------------------
     
-    // -------------------------------------------------------------------------
+    // MARK: - Protection UI with ScreenShot
     private func secureScreenshot(isSecure: Bool) {
         config.prevent.screenshot = isSecure
         DispatchQueue.main.async { [self] in
@@ -444,9 +393,8 @@ class CaptureProtection: RCTEventEmitter {
             protectionViewConfig.secureTextField?.isSecureTextEntry = isSecure
         }
     }
-    // -------------------------------------------------------------------------
     
-    // -------------------------------------------------------------------------
+    // MARK: - Protection UI with ScreenRecord
     private func secureScreenRecord() {
         removeScreenRecordView()
         if config.prevent.screenRecord {
@@ -478,9 +426,8 @@ class CaptureProtection: RCTEventEmitter {
     private func removeScreenRecordView() {
         UIViewUtils.remove(viewController: protectionViewConfig.screenRecord.viewController)
     }
-    // -------------------------------------------------------------------------
     
-    // -------------------------------------------------------------------------
+    // MARK: - Protection UI with App Swither
     private func secureAppSwitcher() {
         removeAppSwitcherView()
         if config.prevent.appSwitcher {
@@ -506,5 +453,4 @@ class CaptureProtection: RCTEventEmitter {
     private func removeAppSwitcherView() {
         UIViewUtils.remove(viewController: protectionViewConfig.appSwitcher.viewController)
     }
-    // -------------------------------------------------------------------------
 }
