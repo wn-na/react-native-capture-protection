@@ -50,12 +50,7 @@ class CaptureProtection: RCTEventEmitter {
     @objc func allowScreenShot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             secureScreenshot(isSecure: false)
-            if hasListeners {
-                self.sendEvent(
-                    withName: "CaptureProtectionListener",
-                    body: self.getPreventStatus()
-                )
-            }
+            sendListener(status: config.getPreventStatus())
             resolver(true)
         }
     }
@@ -63,12 +58,7 @@ class CaptureProtection: RCTEventEmitter {
     @objc func preventScreenShot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             secureScreenshot(isSecure: true)
-            if hasListeners {
-                self.sendEvent(
-                    withName: "CaptureProtectionListener",
-                    body: self.getPreventStatus()
-                )
-            }
+            sendListener(status: config.getPreventStatus())
             resolver(true)
         }
     }
@@ -77,12 +67,7 @@ class CaptureProtection: RCTEventEmitter {
         DispatchQueue.main.async { [self] in
             config.prevent.screenRecord = false
             removeScreenRecordView()
-            if hasListeners {
-                self.sendEvent(
-                    withName: "CaptureProtectionListener",
-                    body: self.getPreventStatus()
-                )
-            }
+            sendListener(status: config.getPreventStatus())
             resolver(true)
         }
     }
@@ -91,12 +76,7 @@ class CaptureProtection: RCTEventEmitter {
         DispatchQueue.main.async { [self] in
             protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.NONE
             eventScreenRecordImmediate(true)
-            if hasListeners {
-                self.sendEvent(
-                    withName: "CaptureProtectionListener",
-                    body: self.getPreventStatus()
-                )
-            }
+            sendListener(status: config.getPreventStatus())
             resolver(true)
         }
     }
@@ -112,12 +92,7 @@ class CaptureProtection: RCTEventEmitter {
             protectionViewConfig.screenRecord.textColor = textColor
             protectionViewConfig.screenRecord.backgroundColor = backgroundColor
             eventScreenRecordImmediate(true)
-            if hasListeners {
-                self.sendEvent(
-                    withName: "CaptureProtectionListener",
-                    body: self.getPreventStatus()
-                )
-            }
+            sendListener(status: config.getPreventStatus())
             resolver(nil)
         }
     }
@@ -127,13 +102,7 @@ class CaptureProtection: RCTEventEmitter {
                                             rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             self.eventScreenRecordImmediate(true)
-            
-            if hasListeners {
-                self.sendEvent(
-                    withName: "CaptureProtectionListener",
-                    body: self.getPreventStatus()
-                )
-            }
+            sendListener(status: config.getPreventStatus())
             
             do {
                 protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.IMAGE
@@ -153,24 +122,14 @@ class CaptureProtection: RCTEventEmitter {
     @objc func allowAppSwitcher(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         config.prevent.appSwitcher = false
         removeAppSwitcherView()
-        if hasListeners {
-            self.sendEvent(
-                withName: "CaptureProtectionListener",
-                body: self.getPreventStatus()
-            )
-        }
+        sendListener(status: config.getPreventStatus())
         resolver(nil)
     }
     
     @objc func preventAppSwitcher(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         config.prevent.appSwitcher = true
         protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.NONE
-        if hasListeners {
-            self.sendEvent(
-                withName: "CaptureProtectionListener",
-                body: self.getPreventStatus()
-            )
-        }
+        sendListener(status: config.getPreventStatus())
         resolver(nil)
     }
     
@@ -184,20 +143,17 @@ class CaptureProtection: RCTEventEmitter {
         protectionViewConfig.appSwitcher.text = text
         protectionViewConfig.appSwitcher.textColor = textColor
         protectionViewConfig.appSwitcher.backgroundColor = backgroundColor
-        if hasListeners {
-            self.sendEvent(
-                withName: "CaptureProtectionListener",
-                body: self.getPreventStatus()
-            )
-        }
+        sendListener(status: config.getPreventStatus())
         resolver(nil)
     }
     
     @objc func preventAppSwitcherWithImage(_ image: NSDictionary,
                                            resolver: @escaping RCTPromiseResolveBlock,
                                            rejecter: @escaping RCTPromiseRejectBlock) {
-        config.prevent.appSwitcher = true
         DispatchQueue.main.async { [self] in
+            config.prevent.appSwitcher = true
+            sendListener(status: config.getPreventStatus())
+
             do {
                 protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.IMAGE
                 if let screenImage = RCTConvert.uiImage(image) {
@@ -210,13 +166,6 @@ class CaptureProtection: RCTEventEmitter {
                 protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.NONE
                 rejecter("preventAppSwitcherWithImage", error.localizedDescription, error)
             }
-        }
-        
-        if hasListeners {
-            self.sendEvent(
-                withName: "CaptureProtectionListener",
-                body: self.getPreventStatus()
-            )
         }
     }
     
@@ -241,27 +190,21 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     // MARK: - Send Event Listener
+    func sendListener(status: Int) {
+        if hasListeners {
+            self.sendEvent(withName: "CaptureProtectionListener", body: status)
+        }
+    }
     
     func triggerEvent(_ event: Constants.CaptureEventType) {
         if hasListeners {
-            self.sendEvent(
-                withName: "CaptureProtectionListener",
-                body: event.rawValue
-            )
-            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1) {
-                if let isCaptured = UIScreen.main.value(forKey: "isCaptured") as? Bool,
-                   isCaptured == true {
-                    self.sendEvent(
-                        withName: "CaptureProtectionListener",
-                        body: Constants.CaptureEventType.RECORDING.rawValue
-                    )
+            sendListener(status: event.rawValue)
+            DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1) { [self] in
+                if let isCaptured = UIScreen.main.value(forKey: "isCaptured") as? Bool, isCaptured == true {
+                    sendListener(status: Constants.CaptureEventType.RECORDING.rawValue)
                 } else {
-                    self.sendEvent(
-                        withName: "CaptureProtectionListener",
-                        body: Constants.CaptureEventType.UNKNOWN.rawValue
-                    )
+                    sendListener(status: Constants.CaptureEventType.UNKNOWN.rawValue)
                 }
-                
             }
         }
     }
@@ -276,16 +219,11 @@ class CaptureProtection: RCTEventEmitter {
                 if config.prevent.screenRecord {
                     secureScreenRecord()
                 }
-                if hasListeners {
-                    self.sendEvent(
-                        withName: "CaptureProtectionListener",
-                        body: Constants.CaptureEventType.RECORDING.rawValue
-                    )
-                }
+                sendListener(status: Constants.CaptureEventType.RECORDING.rawValue)
             } else {
                 removeScreenRecordView()
-                if hasListeners && !isEvent {
-                    self.triggerEvent(Constants.CaptureEventType.END_RECORDING)
+                if !isEvent {
+                    sendListener(status: Constants.CaptureEventType.END_RECORDING.rawValue)
                 }
             }
         }
@@ -383,6 +321,7 @@ class CaptureProtection: RCTEventEmitter {
                 protectionViewConfig.secureTextField = UITextField()
                 protectionViewConfig.secureTextField?.isUserInteractionEnabled = false
                 protectionViewConfig.secureTextField?.tag = Constants.TAG_SCREENSHOT_PROTECTION
+                protectionViewConfig.secureTextField?.isSecureTextEntry = isSecure
                 if let window = UIApplication.shared.delegate?.window {
                     window?.makeKeyAndVisible()
                     window?.layer.superlayer?.addSublayer(protectionViewConfig.secureTextField!.layer)
