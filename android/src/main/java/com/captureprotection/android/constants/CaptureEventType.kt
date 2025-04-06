@@ -1,5 +1,4 @@
-package com.captureprotection.constants
-
+package com.captureprotection.android.constants
 enum class CaptureEventType(val value: Int) {
     NONE(0),
     RECORDING(1),
