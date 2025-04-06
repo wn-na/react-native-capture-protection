@@ -6,9 +6,9 @@
 
 @interface RCT_EXTERN_MODULE(CaptureProtection, RCTEventEmitter)
 // ScreenShot
-RCT_EXTERN_METHOD(allowScreenShot:(RCTPromiseResolveBlock) resolve rejecter:(RCTPromiseRejectBlock) reject)
+RCT_EXTERN_METHOD(allowScreenshot:(RCTPromiseResolveBlock) resolve rejecter:(RCTPromiseRejectBlock) reject)
 
-RCT_EXTERN_METHOD(preventScreenShot:(RCTPromiseResolveBlock) resolve rejecter:(RCTPromiseRejectBlock) reject)
+RCT_EXTERN_METHOD(preventScreenshot:(RCTPromiseResolveBlock) resolve rejecter:(RCTPromiseRejectBlock) reject)
 // Screen Record
 RCT_EXTERN_METHOD(allowScreenRecord:(RCTPromiseResolveBlock) resolve rejecter:(RCTPromiseRejectBlock) reject)
 

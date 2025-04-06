@@ -17,7 +17,7 @@ public struct ProtectionConfig {
 public class CaptureProtectionConfig {
     public var prevent = ProtectionConfig()
     public var observer = ProtectionConfig()
-    public func getPreventStatus() -> Int {
+    public func protectionStatus() -> Int {
         let result =
         (prevent.screenshot ? Constants.CaptureEventType.PREVENT_SCREEN_CAPTURE.rawValue : 0)
         + (prevent.screenRecord ? Constants.CaptureEventType.PREVENT_SCREEN_RECORDING.rawValue : 0)

@@ -32,6 +32,7 @@ open class CaptureProtectionLifecycleListener(
     val screens = ArrayList<Int>()
     val reactCurrentActivity: Activity?
         get() = ActivityUtils.getReactCurrentActivity(reactContext)
+    var eventJob: Job? = null
 
     companion object {
         var screenCaptureCallback: Any? = null
@@ -78,7 +79,8 @@ open class CaptureProtectionLifecycleListener(
     }
 
     fun triggerCaptureEvent(type: CaptureEventType) {
-        CoroutineScope(Dispatchers.Main).launch {
+        eventJob?.cancel()
+        eventJob = CoroutineScope(Dispatchers.Main).launch {
             try {
                 Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, type.value)
                 delay(1000)
@@ -296,7 +298,6 @@ open class CaptureProtectionLifecycleListener(
                 CaptureProtectionLifecycleListener.registerScreenCaptureCallback != null
     }
 
-    /** @deprecated */
     fun hasScreenRecordListener(): Boolean {
         return displayListener != null
     }

@@ -36,7 +36,7 @@ const allow: CaptureProtectionFunction['allow'] = async (option) => {
     };
 
     if (screenshot) {
-      await CaptureProtectionIOSModule?.allowScreenShot?.();
+      await CaptureProtectionIOSModule?.allowScreenshot?.();
     }
 
     if (appSwitcher) {
@@ -65,7 +65,7 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
     };
 
     if (screenshot) {
-      await CaptureProtectionIOSModule?.preventScreenShot?.();
+      await CaptureProtectionIOSModule?.preventScreenshot?.();
     }
 
     if (appSwitcher) {

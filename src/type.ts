@@ -46,8 +46,8 @@ export type AllowOption = {
 export type CaptureEventCallback = (eventType: CaptureEventType) => void;
 
 export interface CaptureProtectionIOSNativeModules {
-  allowScreenShot: () => Promise<void>;
-  preventScreenShot: () => Promise<void>;
+  allowScreenshot: () => Promise<void>;
+  preventScreenshot: () => Promise<void>;
   allowScreenRecord: () => Promise<void>;
   preventScreenRecord: () => Promise<void>;
   preventScreenRecordWithText: (

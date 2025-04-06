@@ -47,18 +47,18 @@ class CaptureProtection: RCTEventEmitter {
         hasListeners = false
     }
     
-    @objc func allowScreenShot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
+    @objc func allowScreenshot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             secureScreenshot(isSecure: false)
-            sendListener(status: config.getPreventStatus())
+            sendListener(status: config.protectionStatus())
             resolver(true)
         }
     }
     
-    @objc func preventScreenShot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
+    @objc func preventScreenshot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             secureScreenshot(isSecure: true)
-            sendListener(status: config.getPreventStatus())
+            sendListener(status: config.protectionStatus())
             resolver(true)
         }
     }
@@ -67,7 +67,7 @@ class CaptureProtection: RCTEventEmitter {
         DispatchQueue.main.async { [self] in
             config.prevent.screenRecord = false
             removeScreenRecordView()
-            sendListener(status: config.getPreventStatus())
+            sendListener(status: config.protectionStatus())
             resolver(true)
         }
     }
@@ -76,7 +76,7 @@ class CaptureProtection: RCTEventEmitter {
         DispatchQueue.main.async { [self] in
             protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.NONE
             eventScreenRecordImmediate(true)
-            sendListener(status: config.getPreventStatus())
+            sendListener(status: config.protectionStatus())
             resolver(true)
         }
     }
@@ -92,7 +92,7 @@ class CaptureProtection: RCTEventEmitter {
             protectionViewConfig.screenRecord.textColor = textColor
             protectionViewConfig.screenRecord.backgroundColor = backgroundColor
             eventScreenRecordImmediate(true)
-            sendListener(status: config.getPreventStatus())
+            sendListener(status: config.protectionStatus())
             resolver(nil)
         }
     }
@@ -102,7 +102,7 @@ class CaptureProtection: RCTEventEmitter {
                                             rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             self.eventScreenRecordImmediate(true)
-            sendListener(status: config.getPreventStatus())
+            sendListener(status: config.protectionStatus())
             
             do {
                 protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.IMAGE
@@ -122,14 +122,14 @@ class CaptureProtection: RCTEventEmitter {
     @objc func allowAppSwitcher(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         config.prevent.appSwitcher = false
         removeAppSwitcherView()
-        sendListener(status: config.getPreventStatus())
+        sendListener(status: config.protectionStatus())
         resolver(nil)
     }
     
     @objc func preventAppSwitcher(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         config.prevent.appSwitcher = true
         protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.NONE
-        sendListener(status: config.getPreventStatus())
+        sendListener(status: config.protectionStatus())
         resolver(nil)
     }
     
@@ -143,7 +143,7 @@ class CaptureProtection: RCTEventEmitter {
         protectionViewConfig.appSwitcher.text = text
         protectionViewConfig.appSwitcher.textColor = textColor
         protectionViewConfig.appSwitcher.backgroundColor = backgroundColor
-        sendListener(status: config.getPreventStatus())
+        sendListener(status: config.protectionStatus())
         resolver(nil)
     }
     
@@ -152,7 +152,7 @@ class CaptureProtection: RCTEventEmitter {
                                            rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             config.prevent.appSwitcher = true
-            sendListener(status: config.getPreventStatus())
+            sendListener(status: config.protectionStatus())
 
             do {
                 protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.IMAGE
