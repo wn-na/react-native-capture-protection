@@ -243,7 +243,7 @@ class CaptureProtection: RCTEventEmitter {
         NotificationCenter.default.addObserver(self, selector: #selector(eventScreenshot(notification:)), name: UIApplication.userDidTakeScreenshotNotification, object: nil)
     }
     
-    private func removeScreenShotObserver() {
+    private func removeScreenshotObserver() {
         guard config.observer.screenshot else { return }
         config.observer.screenshot = false
         NotificationCenter.default.removeObserver(self, name: UIApplication.userDidTakeScreenshotNotification, object: nil)
@@ -263,7 +263,7 @@ class CaptureProtection: RCTEventEmitter {
     
     private func addAppSwitcherObserver() {
         guard !config.observer.appSwitcher else { return }
-        config.observer.screenRecord = true
+        config.observer.appSwitcher = true
         NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: nil) { [weak self] _ in
             DispatchQueue.main.async {
                 self?.secureAppSwitcher()
@@ -291,7 +291,7 @@ class CaptureProtection: RCTEventEmitter {
     
     private func removeBackgroundObserver() {
         guard self.config.observer.appSwitcher else { return }
-        config.observer.screenRecord = false
+        config.observer.appSwitcher = false
         NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: UIApplication.didEnterBackgroundNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
@@ -300,7 +300,7 @@ class CaptureProtection: RCTEventEmitter {
     
     private func addBundleReloadObserver() {
         NotificationCenter.default.addObserver(forName: NSNotification.Name.RCTBridgeWillReload, object: nil, queue: nil) { [weak self] _ in
-            self?.removeScreenShotObserver()
+            self?.removeScreenshotObserver()
             self?.removeScreenRecordObserver()
             self?.removeBackgroundObserver()
             
