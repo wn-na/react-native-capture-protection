@@ -79,20 +79,24 @@ open class CaptureProtectionLifecycleListener(
 
     fun triggerCaptureEvent(type: CaptureEventType) {
         CoroutineScope(Dispatchers.Main).launch {
-            Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, type.value)
-            delay(1000)
-            if (screens.isNotEmpty()) {
-                Response.sendEvent(
+            try {
+                Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, type.value)
+                delay(1000)
+                if (screens.isNotEmpty()) {
+                    Response.sendEvent(
                         reactContext,
                         Constants.LISTENER_EVENT_NAME,
                         CaptureEventType.RECORDING.value
-                )
-            } else {
-                Response.sendEvent(
+                    )
+                } else {
+                    Response.sendEvent(
                         reactContext,
                         Constants.LISTENER_EVENT_NAME,
                         CaptureEventType.NONE.value
-                )
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(Constants.NAME, "Error in triggerCaptureEvent: ${e.message}")
             }
         }
     }
