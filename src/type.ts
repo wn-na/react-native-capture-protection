@@ -99,3 +99,8 @@ export type CaptureProtectionContextType = {
   prevent: CaptureProtectionFunction['prevent'];
   allow: CaptureProtectionFunction['allow'];
 };
+
+export type CaptureDetectionHookType = {
+  protectionStatus: CaptureProtectionModuleStatus;
+  status: CaptureEventType;
+};

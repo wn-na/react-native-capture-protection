@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { CaptureProtection } from './modules';
-import { CaptureEventType, CaptureProtectionModuleStatus } from './type';
+import {
+  CaptureDetectionHookType,
+  CaptureEventType,
+  CaptureProtectionModuleStatus,
+} from './type';
 
-const useCaptureDetection = () => {
+const useCaptureDetection = (): CaptureDetectionHookType => {
   const [status, setStatus] = useState<CaptureEventType>(CaptureEventType.NONE);
   const [protectionStatus, setProtectionStatus] =
     useState<CaptureProtectionModuleStatus>({

@@ -1,27 +1,34 @@
 # react-native-capture-protection
 
-> 🚀 Simple control capture event (like screenshot, screen record) in Android, iOS + React Native
+> 🛡️ A React Native library to prevent screen capture, screenshots and app switcher for enhanced security. Fully compatible with both Expo and CLI.
 
-![Simulator Screen Recording](https://user-images.githubusercontent.com/37437842/206644553-e4c3f2bc-b624-47ac-a005-132199e049b2.gif)
-
-![Simulator Screen Recording - iPhone 15 Pro - 2024-07-02 at 21 19 17](https://github.com/0xlethe/react-native-capture-protection/assets/37437842/ac98e942-8dba-4e5d-9f23-fa10f946b26b)
+| screenshot                                                                                                                           | app switcher                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ![Simulator Screen Recording](https://user-images.githubusercontent.com/37437842/206644553-e4c3f2bc-b624-47ac-a005-132199e049b2.gif) | ![Simulator Screen Recording - iPhone 15 Pro - 2024-07-02 at 21 19 17](https://github.com/0xlethe/react-native-capture-protection/assets/37437842/ac98e942-8dba-4e5d-9f23-fa10f946b26b) |
 
 ## Features
 
-- iOS Capture Event via screen recording, capture capture with Listener
-- allow, prevent Android, iOS Capture Event
-- allow, prevent iOS Record Screen
-- Provider, Hooks
-- > = RN 0.64
-- support Android 14
+- iOS Capture Protection (Screenshot, Screen Recording, App Switcher)
+- Android Capture Protection (Screenshot, Screen Recording)
+- Event Listener for Capture Events
+- Provider and Hooks Support
+- Android 14 Support
 
 ## Installation
+
+### Use npm
 
 ```sh
 npm install react-native-capture-protection
 ```
 
-- Expo
+### Use yarn
+
+```sh
+yarn add react-native-capture-protection
+```
+
+### use Expo
 
 > Only Expo Dev client compatible
 > This library has native code, so it's not work for Expo Go but it's compatible with custom dev client.
@@ -30,39 +37,68 @@ npm install react-native-capture-protection
 npx expo install react-native-capture-protection
 ```
 
+## How to Use
+
 ```js
 import {
   CaptureProtection,
-  CaptureProtectionModuleStatus,
-  isCapturedStatus
+  useCaptureProtection,
+  CaptureEventType
 } from 'react-native-capture-protection';
 
-const Component = (props) => {
-  const { isPrevent, status } = useCaptureProtection();
+const Component = () => {
+  const { protectionStatus, status } = useCaptureProtection();
 
   React.useEffect(() => {
-    console.log('Prevent Status is', isPrevent);
-  }, [isPrevent]);
+    // Prevent all capture events
+    CaptureProtection.prevent();
+
+    // Or prevent specific events
+    CaptureProtection.prevent({
+      screenshot: true,
+      record: true,
+      appSwitcher: true
+    });
+  }, []);
+
   React.useEffect(() => {
-    console.log('Capture Status is', isCapturedStatus(status));
-  }, [status]);
+    // Check if any capture is prevented
+    console.log('Prevent Status:', protectionStatus);
 
-  const onPrevent = () => {
-    CaptureProtection.preventScreenRecord();
-  }
-  const onAllow = () => {
-    CaptureProtection.allowScreenRecord();
-  }
+    // Check current protection status
+    console.log('Protection Status:', status);
+  }, [protectionStatus, status]);
 
-  ...
+  // Allow all capture events
+  const onAllow = async () => {
+    await CaptureProtection.allow();
+  };
 
+  // Allow specific events
+  const onAllowSpecific = async () => {
+    await CaptureProtection.allow({
+      screenshot: true,
+      record: false,
+      appSwitcher: true
+    });
+  };
+
+  // Check if screen is being recorded
+  const checkRecording = async () => {
+    const isRecording = await CaptureProtection.isScreenRecording();
+    console.log('Is Recording:', isRecording);
+  };
+
+  return (
+    // Your component JSX
+  );
 };
 ```
 
-## Docs
+## Documentation
 
-- [method](https://github.com/0xlethe/react-native-capture-protection/wiki/method)
-- [type](https://github.com/0xlethe/react-native-capture-protection/wiki/type)
+- [Methods](./method.md) - Detailed documentation of all available methods
+- [Types](./type.md) - Type definitions and interfaces
 
 ## Contributing
 
