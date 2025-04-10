@@ -64,7 +64,6 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
         val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
         currentActivity!!.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, StatusCode.UNKNOWN.ordinal)
-        super.addScreenCaptureListener()
         promise.resolve(true)
       } catch (e: Exception) {
         promise.reject("preventScreenshot", e)

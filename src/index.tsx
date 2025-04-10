@@ -122,7 +122,6 @@ const allowScreenRecord = async (removeListener = false): Promise<void> => {
  */
 const preventScreenRecord = async (isImmediate = false): Promise<void> => {
   if (Platform.OS === 'android') {
-    await requestPermission();
     return await CaptureProtectionModule?.preventScreenshot?.();
   }
   if (Platform.OS === 'ios') {
@@ -153,7 +152,6 @@ const allowScreenshot = async (removeListener = false): Promise<void> => {
  */
 const preventScreenshot = async (): Promise<void> => {
   if (Platform.OS === 'android') {
-    await requestPermission();
     return await CaptureProtectionModule?.preventScreenshot?.();
   }
   if (Platform.OS === 'ios') {
