@@ -1,8 +1,8 @@
 package com.captureprotection
 
 import android.view.WindowManager
+import com.captureprotection.constants.CaptureEventType
 import com.captureprotection.constants.Constants
-import com.captureprotection.constants.StatusCode
 import com.facebook.react.bridge.*
 import com.facebook.react.module.annotations.ReactModule
 
@@ -17,28 +17,14 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
 
   @ReactMethod
   fun removeListeners(count: Int) {
-    super.removeScreenCaptureListener()
-  }
-
-  @ReactMethod
-  fun addScreenshotListener() {
-    super.addScreenCaptureListener()
-  }
-
-  @ReactMethod
-  fun removeScreenshotListener() {
-    super.removeScreenCaptureListener()
+    // super.removeScreenCaptureListener()
   }
 
   @ReactMethod
   fun hasListener(promise: Promise) {
     currentActivity?.runOnUiThread {
       try {
-        val params =
-                Response.createPreventMap(
-                        super.hasScreenCaptureListener(),
-                        super.hasScreenRecordListener()
-                )
+        val params = super.hasScreenCaptureListener()
         promise.resolve(params)
       } catch (e: Exception) {
         promise.reject("hasListener", e)
@@ -52,52 +38,57 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
       try {
         promise.resolve(super.screens.size > 1)
       } catch (e: Exception) {
-        promise.reject("preventScreenshot", e)
+        promise.reject("isScreenRecording", e)
       }
     }
   }
 
   @ReactMethod
-  fun preventScreenshot(promise: Promise) {
+  fun prevent(promise: Promise) {
     currentActivity?.runOnUiThread {
       try {
         val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
         currentActivity!!.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, StatusCode.UNKNOWN.ordinal)
-        super.addScreenCaptureListener()
+        Response.sendEvent(
+                reactContext,
+                Constants.LISTENER_EVENT_NAME,
+                CaptureEventType.PREVENT_SCREEN_CAPTURE.value +
+                        CaptureEventType.PREVENT_SCREEN_RECORDING.value +
+                        CaptureEventType.PREVENT_SCREEN_APP_SWITCHING.value
+        )
         promise.resolve(true)
       } catch (e: Exception) {
-        promise.reject("preventScreenshot", e)
+        promise.reject("prevent", e)
       }
     }
   }
 
   @ReactMethod
-  fun allowScreenshot(removeListener: Boolean, promise: Promise) {
+  fun allow(promise: Promise) {
     currentActivity?.runOnUiThread {
       try {
         val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
         currentActivity!!.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-        Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, StatusCode.UNKNOWN.ordinal)
-        if (removeListener) {
-          super.removeScreenCaptureListener()
-        }
+        Response.sendEvent(
+                reactContext,
+                Constants.LISTENER_EVENT_NAME,
+                CaptureEventType.ALLOW.value
+        )
         promise.resolve(true)
       } catch (e: Exception) {
-        promise.reject("allowScreenshot", e)
+        promise.reject("allow", e)
       }
     }
   }
 
   @ReactMethod
-  fun getPreventStatus(promise: Promise) {
+  fun protectionStatus(promise: Promise) {
     currentActivity?.runOnUiThread {
       try {
         val flags = ActivityUtils.isSecureFlag(reactContext)
-        val statusMap = Response.createPreventMap(flags, flags)
-        promise.resolve(statusMap)
+        promise.resolve(flags)
       } catch (e: Exception) {
-        promise.reject("getPreventStatus", e)
+        promise.reject("protectionStatus", e)
       }
     }
   }

@@ -11,13 +11,14 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.captureprotection.constants.CaptureEventType
 import com.captureprotection.constants.Constants
-import com.captureprotection.constants.StatusCode
 import com.captureprotection.utils.FileUtils
 import com.captureprotection.utils.ModuleThread
 import com.facebook.react.bridge.*
 import java.lang.reflect.Method
 import java.util.ArrayList
+import kotlinx.coroutines.*
 
 open class CaptureProtectionLifecycleListener(
         private val reactContext: ReactApplicationContext,
@@ -31,6 +32,7 @@ open class CaptureProtectionLifecycleListener(
     val screens = ArrayList<Int>()
     val reactCurrentActivity: Activity?
         get() = ActivityUtils.getReactCurrentActivity(reactContext)
+    var eventJob: Job? = null
 
     companion object {
         var screenCaptureCallback: Any? = null
@@ -71,12 +73,33 @@ open class CaptureProtectionLifecycleListener(
         ) {
             CaptureProtectionLifecycleListener.screenCaptureCallback =
                     Reflection.createScreenCaptureCallback {
-                        Response.sendEvent(
-                                reactContext,
-                                Constants.LISTENER_EVENT_NAME,
-                                StatusCode.CAPTURE_DETECTED.ordinal
-                        )
+                        triggerCaptureEvent(CaptureEventType.CAPTURED)
                     }
+        }
+    }
+
+    fun triggerCaptureEvent(type: CaptureEventType) {
+        eventJob?.cancel()
+        eventJob = CoroutineScope(Dispatchers.Main).launch {
+            try {
+                Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, type.value)
+                delay(1000)
+                if (screens.isNotEmpty()) {
+                    Response.sendEvent(
+                        reactContext,
+                        Constants.LISTENER_EVENT_NAME,
+                        CaptureEventType.RECORDING.value
+                    )
+                } else {
+                    Response.sendEvent(
+                        reactContext,
+                        Constants.LISTENER_EVENT_NAME,
+                        CaptureEventType.NONE.value
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(Constants.NAME, "Error in triggerCaptureEvent: ${e.message}")
+            }
         }
     }
 
@@ -95,8 +118,8 @@ open class CaptureProtectionLifecycleListener(
                                     Response.sendEvent(
                                             reactContext,
                                             Constants.LISTENER_EVENT_NAME,
-                                            if (screens.isEmpty()) StatusCode.UNKNOWN.ordinal
-                                            else StatusCode.RECORD_DETECTED_START.ordinal
+                                            if (screens.isEmpty()) CaptureEventType.NONE.value
+                                            else CaptureEventType.RECORDING.value
                                     )
                                     Log.d(Constants.NAME, "=> display add event $displayId")
                                 } catch (e: Exception) {
@@ -115,13 +138,15 @@ open class CaptureProtectionLifecycleListener(
                                     screens.removeAt(index)
                                 }
                                 try {
-                                    Response.sendEvent(
-                                            reactContext,
-                                            Constants.LISTENER_EVENT_NAME,
-                                            if (screens.isNotEmpty())
-                                                    StatusCode.RECORD_DETECTED_START.ordinal
-                                            else StatusCode.RECORD_DETECTED_END.ordinal
-                                    )
+                                    if (screens.isEmpty()) {
+                                        triggerCaptureEvent(CaptureEventType.END_RECORDING)
+                                    } else {
+                                        Response.sendEvent(
+                                                reactContext,
+                                                Constants.LISTENER_EVENT_NAME,
+                                                CaptureEventType.RECORDING.value
+                                        )
+                                    }
                                     Log.d(Constants.NAME, "=> display remove event $displayId")
                                 } catch (e: Exception) {
                                     Log.e(
@@ -247,11 +272,7 @@ open class CaptureProtectionLifecycleListener(
                                                 Constants.NAME,
                                                 "CaptureProtectionLifecycleListener.contentObserver detect screenshot file"
                                         )
-                                        Response.sendEvent(
-                                                reactContext,
-                                                Constants.LISTENER_EVENT_NAME,
-                                                StatusCode.CAPTURE_DETECTED.ordinal
-                                        )
+                                        triggerCaptureEvent(CaptureEventType.CAPTURED)
                                     }
                                 }
                                 super.onChange(selfChange, uri)

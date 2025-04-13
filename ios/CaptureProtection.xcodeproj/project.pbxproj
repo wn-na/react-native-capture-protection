@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		040D5EA62DA21C7B0014FE24 /* CaptureProtection-Bridging-Header.h in Sources */ = {isa = PBXBuildFile; fileRef = 0434F4A52D756BAA00247D8B /* CaptureProtection-Bridging-Header.h */; };
 		0434F4A22D756B8300247D8B /* CaptureProtection.m in Sources */ = {isa = PBXBuildFile; fileRef = 0434F4A12D756B8300247D8B /* CaptureProtection.m */; };
-		0434F4AE2D75744000247D8B /* CaptureProtection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0434F4AD2D75744000247D8B /* CaptureProtection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -26,11 +26,23 @@
 /* Begin PBXFileReference section */
 		0434F4A12D756B8300247D8B /* CaptureProtection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CaptureProtection.m; sourceTree = "<group>"; };
 		0434F4A52D756BAA00247D8B /* CaptureProtection-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CaptureProtection-Bridging-Header.h"; sourceTree = "<group>"; };
-		0434F4AD2D75744000247D8B /* CaptureProtection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureProtection.swift; sourceTree = "<group>"; };
-		0434F4B52D758C2D00247D8B /* utils */ = {isa = PBXFileReference; lastKnownFileType = folder; path = utils; sourceTree = "<group>"; };
-		0434F4B62D758C3100247D8B /* constants */ = {isa = PBXFileReference; lastKnownFileType = folder; path = constants; sourceTree = "<group>"; };
 		134814201AA4EA6300B7C361 /* libCaptureProtection.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCaptureProtection.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		040D5EA42DA21C740014FE24 /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 58B511D71A9E6C8500147676 /* Sources */;
+			membershipExceptions = (
+				Constants,
+				Utils,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		040D5EA22DA21C2B0014FE24 /* CaptureProtection */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (040D5EA42DA21C740014FE24 /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (Constants, Utils, ); path = CaptureProtection; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		58B511D81A9E6C8500147676 /* Frameworks */ = {
@@ -54,9 +66,7 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				0434F4B52D758C2D00247D8B /* utils */,
-				0434F4B62D758C3100247D8B /* constants */,
-				0434F4AD2D75744000247D8B /* CaptureProtection.swift */,
+				040D5EA22DA21C2B0014FE24 /* CaptureProtection */,
 				0434F4A12D756B8300247D8B /* CaptureProtection.m */,
 				0434F4A52D756BAA00247D8B /* CaptureProtection-Bridging-Header.h */,
 				134814211AA4EA7D00B7C361 /* Products */,
@@ -77,6 +87,9 @@
 			buildRules = (
 			);
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				040D5EA22DA21C2B0014FE24 /* CaptureProtection */,
 			);
 			name = CaptureProtection;
 			productName = RCTDataManager;
@@ -99,14 +112,13 @@
 				};
 			};
 			buildConfigurationList = 58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "CaptureProtection" */;
-			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				English,
 				en,
 			);
 			mainGroup = 58B511D21A9E6C8500147676;
+			preferredProjectObjectVersion = 46;
 			productRefGroup = 58B511D21A9E6C8500147676;
 			projectDirPath = "";
 			projectRoot = "";
@@ -121,8 +133,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				040D5EA62DA21C7B0014FE24 /* CaptureProtection-Bridging-Header.h in Sources */,
 				0434F4A22D756B8300247D8B /* CaptureProtection.m in Sources */,
-				0434F4AE2D75744000247D8B /* CaptureProtection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
