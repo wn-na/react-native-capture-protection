@@ -97,8 +97,9 @@ const Component = () => {
 
 ## Documentation
 
-- [Methods](./method.md) - Detailed documentation of all available methods
-- [Types](./type.md) - Type definitions and interfaces
+- [Methods](./docs/method.md) - Detailed documentation of all available methods
+- [Types](./docs/type.md) - Type definitions and interfaces
+- [Migration Guide](./docs/MIGRATION.md) - Guide for migrating from v1.x to v2.x
 
 ## Contributing
 
