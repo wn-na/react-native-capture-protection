@@ -1,7 +1,7 @@
 {
   "name": "react-native-capture-protection",
-  "version": "2.0.0-beta0",
-  "description": "🛡️ A React Native library to prevent screen capture, screenshots and app switcher for enhanced security. Fully compatible with both Expo and CLI.",
+  "version": "2.0.0",
+  "description": "🛡️ A React Native library to prevent and detect for screen capture, screenshots and app switcher for enhanced security. Fully compatible with both Expo and CLI.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
