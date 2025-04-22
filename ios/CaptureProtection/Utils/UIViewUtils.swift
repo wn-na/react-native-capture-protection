@@ -66,13 +66,14 @@ public class UIViewUtils {
        }
    }
     
-    public static func remove(viewController: UIViewController?) {
+    public static func remove(viewController: UIViewController?, completion: (() -> Void)? = nil) {
        DispatchQueue.main.async {
            if let existingViewController = viewController {
                existingViewController.willMove(toParent: nil)
                existingViewController.view.removeFromSuperview()
                existingViewController.removeFromParent()
            }
+           completion?()
        }
    }
 }

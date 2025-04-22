@@ -14,6 +14,7 @@ class CaptureProtection: RCTEventEmitter {
     private var hasListeners = false
     private var config = CaptureProtectionConfig()
     private var protectionViewConfig = ProtectionViewConfig()
+    private var protectorTimer: DispatchSourceTimer?
     
     override init() {
         super.init()
@@ -30,6 +31,14 @@ class CaptureProtection: RCTEventEmitter {
         removeScreenRecordObserver()
         removeBackgroundObserver()
         removeBundleReloadObserver()
+    }
+    
+    
+    func cancelTimer() {
+      if (protectorTimer != nil) {
+        protectorTimer?.cancel()
+        protectorTimer = nil
+      }
     }
     
     // MARK: - React Native Module Function
@@ -299,6 +308,9 @@ class CaptureProtection: RCTEventEmitter {
     private func removeBackgroundObserver() {
         guard self.config.observer.appSwitcher else { return }
         config.observer.appSwitcher = false
+        DispatchQueue.main.async {
+            self.removeAppSwitcherView()
+        }
         NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: UIApplication.didEnterBackgroundNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
@@ -379,28 +391,38 @@ class CaptureProtection: RCTEventEmitter {
     
     // MARK: - Protection UI with App Swither
     private func secureAppSwitcher() {
-        removeAppSwitcherView()
-        if config.prevent.appSwitcher {
-            DispatchQueue.main.async { [self] in
-                let config = protectionViewConfig.appSwitcher
-                if config.type == Constants.CaptureProtectionType.TEXT {
-                    protectionViewConfig.appSwitcher.viewController = UIViewUtils.textView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, text: config.text!, textColor: config.textColor, backgroundColor: config.backgroundColor)
-                } else if config.type == Constants.CaptureProtectionType.IMAGE {
-                    protectionViewConfig.appSwitcher.viewController = UIViewUtils.imageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!)
-                } else {
-                    protectionViewConfig.appSwitcher.viewController = UIViewUtils.view(
-                        tag: Constants.TAG_APP_SWITCHER_PROTECTION,
-                        backgroundColor: config.backgroundColor
-                    )
+        removeAppSwitcherView() { [self] in
+            if config.prevent.appSwitcher {
+                self.cancelTimer()
+                protectorTimer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
+                protectorTimer!.schedule(deadline: .now() + 0.05)
+                protectorTimer!.setEventHandler {
+                    DispatchQueue.main.async { [self] in
+                        let config = protectionViewConfig.appSwitcher
+                        if config.type == Constants.CaptureProtectionType.TEXT {
+                            protectionViewConfig.appSwitcher.viewController = UIViewUtils.textView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, text: config.text!, textColor: config.textColor, backgroundColor: config.backgroundColor)
+                        } else if config.type == Constants.CaptureProtectionType.IMAGE {
+                            protectionViewConfig.appSwitcher.viewController = UIViewUtils.imageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!)
+                        } else {
+                            protectionViewConfig.appSwitcher.viewController = UIViewUtils.view(
+                                tag: Constants.TAG_APP_SWITCHER_PROTECTION,
+                                backgroundColor: config.backgroundColor
+                            )
+                        }
+                        if let window = UIApplication.shared.delegate?.window {
+                            window?.addSubview(protectionViewConfig.appSwitcher.viewController!.view)
+                        }
+                    }
                 }
-                if let window = UIApplication.shared.delegate?.window {
-                    window?.addSubview(protectionViewConfig.appSwitcher.viewController!.view)
-                }
+                protectorTimer!.resume()
             }
         }
     }
     
-    private func removeAppSwitcherView() {
-        UIViewUtils.remove(viewController: protectionViewConfig.appSwitcher.viewController)
+    private func removeAppSwitcherView(completion: (() -> Void)? = nil) {
+        self.cancelTimer()
+        UIViewUtils.remove(viewController: protectionViewConfig.appSwitcher.viewController) {
+            completion?()
+        }
     }
 }
