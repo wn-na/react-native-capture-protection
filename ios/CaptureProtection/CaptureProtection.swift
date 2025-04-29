@@ -35,10 +35,11 @@ class CaptureProtection: RCTEventEmitter {
     
     
     func cancelTimer() {
-      if (protectorTimer != nil) {
-        protectorTimer?.cancel()
-        protectorTimer = nil
-      }
+        if let timer = protectorTimer {
+            timer.setEventHandler {}
+            timer.cancel()
+            protectorTimer = nil
+        }
     }
     
     // MARK: - React Native Module Function
@@ -327,6 +328,8 @@ class CaptureProtection: RCTEventEmitter {
             self?.removeScreenRecordView()
             self?.removeAppSwitcherView()
             
+            self?.cancelTimer()
+            
             self!.protectionViewConfig = ProtectionViewConfig()
             self!.config = CaptureProtectionConfig()
         }
@@ -393,7 +396,6 @@ class CaptureProtection: RCTEventEmitter {
     private func secureAppSwitcher() {
         removeAppSwitcherView() { [self] in
             if config.prevent.appSwitcher {
-                self.cancelTimer()
                 protectorTimer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
                 protectorTimer!.schedule(deadline: .now() + 0.05)
                 protectorTimer!.setEventHandler {
