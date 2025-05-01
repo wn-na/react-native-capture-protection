@@ -18,18 +18,13 @@ class CaptureProtection: RCTEventEmitter {
     
     override init() {
         super.init()
-        DispatchQueue.main.async { [self] in
-            addScreenshotObserver()
-            addScreenRecordObserver()
-            addAppSwitcherObserver()
-            addBundleReloadObserver()
-        }
+        addScreenshotObserver()
+        addScreenRecordObserver()
+        addAppSwitcherObserver()
+        addBundleReloadObserver()
     }
-
+    
     deinit {
-        removeScreenshotObserver()
-        removeScreenRecordObserver()
-        removeBackgroundObserver()
         removeBundleReloadObserver()
     }
     
@@ -65,19 +60,15 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     @objc func allowScreenshot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async { [self] in
-            secureScreenshot(isSecure: false)
-            sendListener(status: config.protectionStatus())
-            resolver(true)
-        }
+        secureScreenshot(isSecure: false)
+        sendListener(status: config.protectionStatus())
+        resolver(true)
     }
     
     @objc func preventScreenshot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        DispatchQueue.main.async { [self] in
-            secureScreenshot(isSecure: true)
-            sendListener(status: config.protectionStatus())
-            resolver(true)
-        }
+        secureScreenshot(isSecure: true)
+        sendListener(status: config.protectionStatus())
+        resolver(true)
     }
     
     @objc func allowScreenRecord(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
@@ -319,26 +310,23 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     private func addBundleReloadObserver() {
-        NotificationCenter.default.addObserver(forName: NSNotification.Name.RCTBridgeWillReload, object: nil, queue: nil) { [weak self] _ in
-            self?.removeScreenshotObserver()
-            self?.removeScreenRecordObserver()
-            self?.removeBackgroundObserver()
-            
-            self?.secureScreenshot(isSecure: false)
-            self?.removeScreenRecordView()
-            self?.removeAppSwitcherView()
-            
-            self?.cancelTimer()
-            
-            self!.protectionViewConfig = ProtectionViewConfig()
-            self!.config = CaptureProtectionConfig()
-        }
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.RCTTriggerReloadCommand, object: nil, queue: nil) { [weak self] _ in
+              DispatchQueue.main.async {
+                  self?.cancelTimer()
+                  if let secureTextField = self?.protectionViewConfig?.secureTextField {
+                      secureTextField.isSecureTextEntry = false
+                  }
+                  self?.removeScreenshotObserver()
+                  self?.removeScreenRecordObserver()
+                  self?.removeBackgroundObserver()
+                  self?.removeBundleReloadObserver()
+              }
+          }
     }
 
     private func removeBundleReloadObserver() {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.RCTBridgeWillReload, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.RCTTriggerReloadCommand, object: nil)
     }
-    
     // MARK: - Protection UI with ScreenShot
     private func secureScreenshot(isSecure: Bool) {
         config.prevent.screenshot = isSecure
