@@ -12,8 +12,8 @@ import Foundation
 @objc(CaptureProtection)
 class CaptureProtection: RCTEventEmitter {
     private var hasListeners = false
-    private var config = CaptureProtectionConfig()
-    private var protectionViewConfig = ProtectionViewConfig()
+    static var config = CaptureProtectionConfig()
+    static var protectionViewConfig = ProtectionViewConfig()
     private var protectorTimer: DispatchSourceTimer?
     
     override init() {
@@ -61,30 +61,30 @@ class CaptureProtection: RCTEventEmitter {
     
     @objc func allowScreenshot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         secureScreenshot(isSecure: false)
-        sendListener(status: config.protectionStatus())
+        sendListener(status: CaptureProtection.config.protectionStatus())
         resolver(true)
     }
     
     @objc func preventScreenshot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         secureScreenshot(isSecure: true)
-        sendListener(status: config.protectionStatus())
+        sendListener(status: CaptureProtection.config.protectionStatus())
         resolver(true)
     }
     
     @objc func allowScreenRecord(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
-            config.prevent.screenRecord = false
+            CaptureProtection.config.prevent.screenRecord = false
             removeScreenRecordView()
-            sendListener(status: config.protectionStatus())
+            sendListener(status: CaptureProtection.config.protectionStatus())
             resolver(true)
         }
     }
     
     @objc func preventScreenRecord(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
-            protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.NONE
+            CaptureProtection.protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.NONE
             eventScreenRecordImmediate(true)
-            sendListener(status: config.protectionStatus())
+            sendListener(status: CaptureProtection.config.protectionStatus())
             resolver(true)
         }
     }
@@ -95,12 +95,12 @@ class CaptureProtection: RCTEventEmitter {
                                            resolver: @escaping RCTPromiseResolveBlock,
                                            rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
-            protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.TEXT
-            protectionViewConfig.screenRecord.text = text
-            protectionViewConfig.screenRecord.textColor = textColor
-            protectionViewConfig.screenRecord.backgroundColor = backgroundColor
+            CaptureProtection.protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.TEXT
+            CaptureProtection.protectionViewConfig.screenRecord.text = text
+            CaptureProtection.protectionViewConfig.screenRecord.textColor = textColor
+            CaptureProtection.protectionViewConfig.screenRecord.backgroundColor = backgroundColor
             eventScreenRecordImmediate(true)
-            sendListener(status: config.protectionStatus())
+            sendListener(status: CaptureProtection.config.protectionStatus())
             resolver(nil)
         }
     }
@@ -110,34 +110,34 @@ class CaptureProtection: RCTEventEmitter {
                                             rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
             self.eventScreenRecordImmediate(true)
-            sendListener(status: config.protectionStatus())
+            sendListener(status: CaptureProtection.config.protectionStatus())
             
             do {
-                protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.IMAGE
+                CaptureProtection.protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.IMAGE
                 if let screenImage = RCTConvert.uiImage(image) {
-                    protectionViewConfig.screenRecord.image = screenImage
+                    CaptureProtection.protectionViewConfig.screenRecord.image = screenImage
                     resolver(nil)
                 } else {
                     throw NSError(domain: "preventScreenRecordWithImage", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid image data"])
                 }
             } catch {
-                protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.NONE
+                CaptureProtection.protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.NONE
                 rejecter("preventScreenRecordWithImage", error.localizedDescription, error)
             }
         }
     }
     
     @objc func allowAppSwitcher(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        config.prevent.appSwitcher = false
+        CaptureProtection.config.prevent.appSwitcher = false
         removeAppSwitcherView()
-        sendListener(status: config.protectionStatus())
+        sendListener(status: CaptureProtection.config.protectionStatus())
         resolver(nil)
     }
     
     @objc func preventAppSwitcher(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        config.prevent.appSwitcher = true
-        protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.NONE
-        sendListener(status: config.protectionStatus())
+        CaptureProtection.config.prevent.appSwitcher = true
+        CaptureProtection.protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.NONE
+        sendListener(status: CaptureProtection.config.protectionStatus())
         resolver(nil)
     }
     
@@ -146,12 +146,12 @@ class CaptureProtection: RCTEventEmitter {
                                           backgroundColor: String,
                                           resolver: @escaping RCTPromiseResolveBlock,
                                           rejecter: @escaping RCTPromiseRejectBlock) {
-        config.prevent.appSwitcher = true
-        protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.TEXT
-        protectionViewConfig.appSwitcher.text = text
-        protectionViewConfig.appSwitcher.textColor = textColor
-        protectionViewConfig.appSwitcher.backgroundColor = backgroundColor
-        sendListener(status: config.protectionStatus())
+        CaptureProtection.config.prevent.appSwitcher = true
+        CaptureProtection.protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.TEXT
+        CaptureProtection.protectionViewConfig.appSwitcher.text = text
+        CaptureProtection.protectionViewConfig.appSwitcher.textColor = textColor
+        CaptureProtection.protectionViewConfig.appSwitcher.backgroundColor = backgroundColor
+        sendListener(status: CaptureProtection.config.protectionStatus())
         resolver(nil)
     }
     
@@ -159,19 +159,19 @@ class CaptureProtection: RCTEventEmitter {
                                            resolver: @escaping RCTPromiseResolveBlock,
                                            rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
-            config.prevent.appSwitcher = true
-            sendListener(status: config.protectionStatus())
+            CaptureProtection.config.prevent.appSwitcher = true
+            sendListener(status: CaptureProtection.config.protectionStatus())
 
             do {
-                protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.IMAGE
+                CaptureProtection.protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.IMAGE
                 if let screenImage = RCTConvert.uiImage(image) {
-                    protectionViewConfig.appSwitcher.image = screenImage
+                    CaptureProtection.protectionViewConfig.appSwitcher.image = screenImage
                     resolver(nil)
                 } else {
                     throw NSError(domain: "preventAppSwitcherWithImage", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid image data"])
                 }
             } catch {
-                protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.NONE
+                CaptureProtection.protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.NONE
                 rejecter("preventAppSwitcherWithImage", error.localizedDescription, error)
             }
         }
@@ -183,9 +183,9 @@ class CaptureProtection: RCTEventEmitter {
     
     @objc func protectionStatus(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
         resolver([
-            "screenshot": config.prevent.screenshot,
-            "record": config.prevent.screenRecord,
-            "appSwitcher": config.prevent.appSwitcher
+            "screenshot": CaptureProtection.config.prevent.screenshot,
+            "record": CaptureProtection.config.prevent.screenRecord,
+            "appSwitcher": CaptureProtection.config.prevent.appSwitcher
         ])
     }
     
@@ -224,7 +224,7 @@ class CaptureProtection: RCTEventEmitter {
     @objc func eventScreenRecord(notification: Notification, isEvent: Bool = false) {
         if let isCaptured = UIScreen.main.value(forKey: "isCaptured") as? Bool {
             if isCaptured {
-                if config.prevent.screenRecord {
+                if CaptureProtection.config.prevent.screenRecord {
                     secureScreenRecord()
                 }
                 sendListener(status: Constants.CaptureEventType.RECORDING.rawValue)
@@ -239,39 +239,39 @@ class CaptureProtection: RCTEventEmitter {
     
     func eventScreenRecordImmediate(_ prevent: Bool = false) {
         if (prevent) {
-            config.prevent.screenRecord = true
+            CaptureProtection.config.prevent.screenRecord = true
         }
         eventScreenRecord(notification: Notification(name: Notification.Name("Init")), isEvent: true)
     }
     
     // MARK: - Observer
     private func addScreenshotObserver() {
-        guard !config.observer.screenshot else { return }
-        config.observer.screenshot = true
+        guard !CaptureProtection.config.observer.screenshot else { return }
+        CaptureProtection.config.observer.screenshot = true
         NotificationCenter.default.addObserver(self, selector: #selector(eventScreenshot(notification:)), name: UIApplication.userDidTakeScreenshotNotification, object: nil)
     }
     
     private func removeScreenshotObserver() {
-        guard config.observer.screenshot else { return }
-        config.observer.screenshot = false
+        guard CaptureProtection.config.observer.screenshot else { return }
+        CaptureProtection.config.observer.screenshot = false
         NotificationCenter.default.removeObserver(self, name: UIApplication.userDidTakeScreenshotNotification, object: nil)
     }
     
     private func addScreenRecordObserver() {
-        guard !config.observer.screenRecord else { return }
-        config.observer.screenRecord = true
+        guard !CaptureProtection.config.observer.screenRecord else { return }
+        CaptureProtection.config.observer.screenRecord = true
         NotificationCenter.default.addObserver(self, selector: #selector(eventScreenRecord), name: UIScreen.capturedDidChangeNotification, object: nil)
     }
     
     private func removeScreenRecordObserver() {
-        guard config.observer.screenRecord else { return }
-        config.observer.screenRecord = false
+        guard CaptureProtection.config.observer.screenRecord else { return }
+        CaptureProtection.config.observer.screenRecord = false
         NotificationCenter.default.removeObserver(self, name: UIScreen.capturedDidChangeNotification, object: nil)
     }
     
     private func addAppSwitcherObserver() {
-        guard !config.observer.appSwitcher else { return }
-        config.observer.appSwitcher = true
+        guard !CaptureProtection.config.observer.appSwitcher else { return }
+        CaptureProtection.config.observer.appSwitcher = true
         NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: nil) { [weak self] _ in
             DispatchQueue.main.async {
                 self?.secureAppSwitcher()
@@ -298,8 +298,8 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     private func removeBackgroundObserver() {
-        guard self.config.observer.appSwitcher else { return }
-        config.observer.appSwitcher = false
+        guard CaptureProtection.config.observer.appSwitcher else { return }
+        CaptureProtection.config.observer.appSwitcher = false
         DispatchQueue.main.async {
             self.removeAppSwitcherView()
         }
@@ -310,97 +310,118 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     private func addBundleReloadObserver() {
-        NotificationCenter.default.addObserver(forName: NSNotification.Name.RCTTriggerReloadCommand, object: nil, queue: nil) { [weak self] _ in
-              DispatchQueue.main.async {
-                  self?.cancelTimer()
-                  if let secureTextField = self?.protectionViewConfig?.secureTextField {
-                      secureTextField.isSecureTextEntry = false
-                  }
-                  self?.removeScreenshotObserver()
-                  self?.removeScreenRecordObserver()
-                  self?.removeBackgroundObserver()
-                  self?.removeBundleReloadObserver()
-              }
-          }
+        NotificationCenter.default.addObserver(forName: NSNotification.Name.RCTTriggerReloadCommand, object: nil, queue: .main) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.cancelTimer()
+                if let secureTextField = CaptureProtection.protectionViewConfig.secureTextField {
+                    secureTextField.isSecureTextEntry = false
+                }
+                
+                self?.secureScreenshot(isSecure: false)
+                self?.removeScreenshotObserver()
+                self?.removeScreenRecordObserver()
+                self?.removeBackgroundObserver()
+                self?.removeBundleReloadObserver()
+            }
+        }
     }
 
     private func removeBundleReloadObserver() {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name.RCTTriggerReloadCommand, object: nil)
     }
     // MARK: - Protection UI with ScreenShot
-    private func secureScreenshot(isSecure: Bool) {
-        config.prevent.screenshot = isSecure
-        DispatchQueue.main.async { [self] in
-            if protectionViewConfig.secureTextField == nil {
-                protectionViewConfig.secureTextField = UITextField()
-                protectionViewConfig.secureTextField?.isUserInteractionEnabled = false
-                protectionViewConfig.secureTextField?.tag = Constants.TAG_SCREENSHOT_PROTECTION
-                protectionViewConfig.secureTextField?.isSecureTextEntry = isSecure
-                if let window = UIApplication.shared.delegate?.window {
-                    window?.makeKeyAndVisible()
-                    window?.layer.superlayer?.addSublayer(protectionViewConfig.secureTextField!.layer)
-                    protectionViewConfig.secureTextField?.layer.sublayers?.first?.addSublayer(window!.layer)
-                    protectionViewConfig.secureTextField?.layer.sublayers?.last?.addSublayer(window!.layer)
+    @objc func secureScreenshot(isSecure: Bool) {
+        CaptureProtection.config.prevent.screenshot = isSecure
+        if isSecure == false {
+            DispatchQueue.main.async {
+                CaptureProtection.protectionViewConfig.secureTextField?.isSecureTextEntry = false
+            }
+            return
+        } else {
+            if CaptureProtection.protectionViewConfig.secureTextField == nil {
+                DispatchQueue.main.async {
+                    if CaptureProtection.protectionViewConfig.secureTextField == nil {
+                        CaptureProtection.protectionViewConfig.secureTextField = UITextField.init()
+                        CaptureProtection.protectionViewConfig.secureTextField!.isUserInteractionEnabled = false
+                        CaptureProtection.protectionViewConfig.secureTextField!.tag = Constants.TAG_SCREENSHOT_PROTECTION
+                        CaptureProtection.protectionViewConfig.secureTextField!.isSecureTextEntry = true
+                        if let window = UIApplication.shared.delegate?.window {
+                            window?.makeKeyAndVisible()
+                            
+                            window?.layer.superlayer?.addSublayer(CaptureProtection.protectionViewConfig.secureTextField!.layer)
+                            CaptureProtection.protectionViewConfig.secureTextField?.layer.sublayers?.first?.addSublayer(window!.layer)
+                            CaptureProtection.protectionViewConfig.secureTextField?.layer.sublayers?.last?.addSublayer(window!.layer)
+                        }
+                    }
+                }
+            } else {
+                DispatchQueue.main.async {
+                    CaptureProtection.protectionViewConfig.secureTextField?.isSecureTextEntry = true
                 }
             }
-            protectionViewConfig.secureTextField?.isSecureTextEntry = isSecure
         }
     }
     
     // MARK: - Protection UI with ScreenRecord
     private func secureScreenRecord() {
         removeScreenRecordView()
-        if config.prevent.screenRecord {
-            DispatchQueue.main.async { [self] in
-                let config = protectionViewConfig.screenRecord
+        if CaptureProtection.config.prevent.screenRecord {
+            DispatchQueue.main.async {
+                let config = CaptureProtection.protectionViewConfig.screenRecord
                 if config.type == Constants.CaptureProtectionType.TEXT {
-                    protectionViewConfig.screenRecord.viewController = UIViewUtils.textView(
+                    CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.textView(
                         tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
                         text: config.text!,
                         textColor: config.textColor,
                         backgroundColor: config.backgroundColor)
                 } else if config.type == Constants.CaptureProtectionType.IMAGE {
-                    protectionViewConfig.screenRecord.viewController = UIViewUtils.imageView(
+                    CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.imageView(
                         tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
                         image: config.image!)
                 } else {
-                    protectionViewConfig.screenRecord.viewController = UIViewUtils.view(
+                    CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.view(
                         tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
                         backgroundColor: config.backgroundColor
                     )
                 }
                 if let window = UIApplication.shared.delegate?.window {
-                    window?.addSubview(protectionViewConfig.screenRecord.viewController!.view)
+                    window?.rootViewController?.addChild(CaptureProtection.protectionViewConfig.screenRecord.viewController!)
+                    window?.rootViewController?.view.addSubview(CaptureProtection.protectionViewConfig.screenRecord.viewController!.view)
+                    window?.makeKeyAndVisible()
+                    CaptureProtection.protectionViewConfig.screenRecord.viewController!.didMove(toParent: window?.rootViewController)
                 }
             }
         }
     }
     
     private func removeScreenRecordView() {
-        UIViewUtils.remove(viewController: protectionViewConfig.screenRecord.viewController)
+        UIViewUtils.remove(viewController: CaptureProtection.protectionViewConfig.screenRecord.viewController)
     }
     
     // MARK: - Protection UI with App Swither
     private func secureAppSwitcher() {
         removeAppSwitcherView() { [self] in
-            if config.prevent.appSwitcher {
+            if CaptureProtection.config.prevent.appSwitcher {
                 protectorTimer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
                 protectorTimer!.schedule(deadline: .now() + 0.05)
                 protectorTimer!.setEventHandler {
-                    DispatchQueue.main.async { [self] in
-                        let config = protectionViewConfig.appSwitcher
+                    DispatchQueue.main.async {
+                        let config = CaptureProtection.protectionViewConfig.appSwitcher
                         if config.type == Constants.CaptureProtectionType.TEXT {
-                            protectionViewConfig.appSwitcher.viewController = UIViewUtils.textView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, text: config.text!, textColor: config.textColor, backgroundColor: config.backgroundColor)
+                            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.textView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, text: config.text!, textColor: config.textColor, backgroundColor: config.backgroundColor)
                         } else if config.type == Constants.CaptureProtectionType.IMAGE {
-                            protectionViewConfig.appSwitcher.viewController = UIViewUtils.imageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!)
+                            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.imageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!)
                         } else {
-                            protectionViewConfig.appSwitcher.viewController = UIViewUtils.view(
+                            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.view(
                                 tag: Constants.TAG_APP_SWITCHER_PROTECTION,
                                 backgroundColor: config.backgroundColor
                             )
                         }
                         if let window = UIApplication.shared.delegate?.window {
-                            window?.addSubview(protectionViewConfig.appSwitcher.viewController!.view)
+                            window?.rootViewController?.addChild(CaptureProtection.protectionViewConfig.appSwitcher.viewController!)
+                            window?.rootViewController?.view.addSubview(CaptureProtection.protectionViewConfig.appSwitcher.viewController!.view)
+                            window?.makeKeyAndVisible()
+                            CaptureProtection.protectionViewConfig.appSwitcher.viewController!.didMove(toParent: window?.rootViewController)
                         }
                     }
                 }
@@ -411,7 +432,7 @@ class CaptureProtection: RCTEventEmitter {
     
     private func removeAppSwitcherView(completion: (() -> Void)? = nil) {
         self.cancelTimer()
-        UIViewUtils.remove(viewController: protectionViewConfig.appSwitcher.viewController) {
+        UIViewUtils.remove(viewController: CaptureProtection.protectionViewConfig.appSwitcher.viewController) {
             completion?()
         }
     }
