@@ -6,6 +6,8 @@
 
 Prevents screen capture and recording based on the provided options.
 
+> For Android, prevent specific events is not available. 
+
 **Parameters:**
 
 - `option?: PreventOption` - Configuration object for preventing specific capture events
@@ -34,6 +36,8 @@ await CaptureProtection.prevent({
 ### `allow(option?: AllowOption)`
 
 Allows screen capture and recording based on the provided options.
+
+> For Android, allow specific events is not available. 
 
 **Parameters:**
 
