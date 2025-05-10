@@ -6,7 +6,7 @@
 
 Prevents screen capture and recording based on the provided options.
 
-> For Android, prevent specific events is not available. 
+> For Android, prevent specific events is not available.
 
 **Parameters:**
 
@@ -37,7 +37,7 @@ await CaptureProtection.prevent({
 
 Allows screen capture and recording based on the provided options.
 
-> For Android, allow specific events is not available. 
+> For Android, allow specific events is not available.
 
 **Parameters:**
 
@@ -102,6 +102,8 @@ console.log('Protection Status:', status);
 
 React hook for managing capture protection state.
 
+> In order to use that hook, you need to declare a `CaptureProtectionProvider`
+
 **Returns:**
 
 ```typescript
@@ -114,6 +116,12 @@ React hook for managing capture protection state.
 ```
 
 **Example:**
+
+- `App.tsx`
+
+```typescript
+return <CaptureProtectionProvider>...</CaptureProtectionProvider>;
+```
 
 ```typescript
 const { isPrevent, status, allow, prevent } = useCaptureProtection();
