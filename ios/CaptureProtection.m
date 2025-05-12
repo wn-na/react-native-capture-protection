@@ -18,6 +18,8 @@ RCT_EXTERN_METHOD(preventScreenRecordWithText:(NSString *) text
                   backgroundColor: (NSString *) backgroundColor
                   resolver:(RCTPromiseResolveBlock) resolve rejecter:(RCTPromiseRejectBlock) reject)
 RCT_EXTERN_METHOD(preventScreenRecordWithImage:(NSDictionary*) image
+                  backgroundColor: (NSString *) backgroundColor
+                  contentMode: (double) contentMode
                   resolver:(RCTPromiseResolveBlock) resolve rejecter:(RCTPromiseRejectBlock) reject)
 
 // App Switcher
@@ -29,6 +31,8 @@ RCT_EXTERN_METHOD(preventAppSwitcherWithText:(NSString *)text
                   backgroundColor: (NSString *)backgroundColor
                   resolver:(RCTPromiseResolveBlock) resolve rejecter:(RCTPromiseRejectBlock) reject)
 RCT_EXTERN_METHOD(preventAppSwitcherWithImage:(NSDictionary*) image
+                  backgroundColor: (NSString *) backgroundColor
+                  contentMode: (double) contentMode
                   resolver:(RCTPromiseResolveBlock) resolve rejecter:(RCTPromiseRejectBlock) reject)
 
 // Etc

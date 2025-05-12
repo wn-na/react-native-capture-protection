@@ -9,7 +9,7 @@ import UIKit
 import Foundation
 
 public class UIViewUtils {
-    public static func imageView(tag: Int, image: UIImage) -> UIViewController  {
+    public static func imageView(tag: Int, image: UIImage, backgroundColor: String, contentMode: UIView.ContentMode) -> UIViewController  {
         guard let window = UIApplication.shared.delegate?.window ?? nil else { return UIViewController() }
         
         let viewController = UIViewController()
@@ -18,10 +18,10 @@ public class UIViewUtils {
         let imageView = UIImageView(image: image)
         imageView.frame = window.frame
         imageView.clipsToBounds = true
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = contentMode
         
         viewController.view.addSubview(imageView)
-        viewController.view.backgroundColor = .white
+        viewController.view.backgroundColor = TextUtils.colorFromHexString(hexString: backgroundColor, defaultColor: .white)
         
         return viewController
     }
