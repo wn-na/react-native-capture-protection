@@ -8,6 +8,7 @@ import {
   CaptureProtectionAndroidNativeModules,
   CaptureProtectionFunction,
   CaptureProtectionIOSNativeModules,
+  ContentMode,
 } from './type';
 
 const CaptureProtectionModule = NativeModules?.CaptureProtection ?? {};
@@ -80,8 +81,8 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
         if ('image' in appSwitcher) {
           await CaptureProtectionIOSModule?.preventAppSwitcherWithImage?.(
             Image.resolveAssetSource(appSwitcher.image as unknown as number),
-            appSwitcher?.backgroundColor,
-            appSwitcher?.contentMode
+            appSwitcher?.backgroundColor ?? "#ffffff",
+            appSwitcher?.contentMode ?? ContentMode.scaleAspectFit
           );
         } else {
           await CaptureProtectionIOSModule?.preventAppSwitcherWithText?.(
@@ -100,8 +101,8 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
         if ('image' in record) {
           await CaptureProtectionIOSModule?.preventScreenRecordWithImage?.(
             Image.resolveAssetSource(record.image as unknown as number),
-            record?.backgroundColor,
-            record?.contentMode
+            record?.backgroundColor ?? "#ffffff",
+            record?.contentMode?? ContentMode.scaleAspectFit
           );
         } else {
           await CaptureProtectionIOSModule?.preventScreenRecordWithText?.(
