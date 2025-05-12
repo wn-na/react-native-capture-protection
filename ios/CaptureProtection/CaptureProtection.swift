@@ -106,6 +106,8 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     @objc func preventScreenRecordWithImage(_ image: NSDictionary,
+                                            backgroundColor: String,
+                                            contentMode: Double,
                                             resolver: @escaping RCTPromiseResolveBlock,
                                             rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
@@ -114,6 +116,9 @@ class CaptureProtection: RCTEventEmitter {
             
             do {
                 CaptureProtection.protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.IMAGE
+                CaptureProtection.protectionViewConfig.screenRecord.backgroundColor = backgroundColor
+               
+                CaptureProtection.protectionViewConfig.screenRecord.contentMode = UIView.ContentMode(rawValue: Int(contentMode)) ?? .scaleAspectFit
                 if let screenImage = RCTConvert.uiImage(image) {
                     CaptureProtection.protectionViewConfig.screenRecord.image = screenImage
                     resolver(nil)
@@ -156,6 +161,8 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     @objc func preventAppSwitcherWithImage(_ image: NSDictionary,
+                                           backgroundColor: String,
+                                           contentMode: Double,
                                            resolver: @escaping RCTPromiseResolveBlock,
                                            rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
@@ -164,6 +171,8 @@ class CaptureProtection: RCTEventEmitter {
 
             do {
                 CaptureProtection.protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.IMAGE
+                CaptureProtection.protectionViewConfig.appSwitcher.backgroundColor = backgroundColor
+                CaptureProtection.protectionViewConfig.appSwitcher.contentMode = UIView.ContentMode(rawValue: Int(contentMode)) ?? .scaleAspectFit
                 if let screenImage = RCTConvert.uiImage(image) {
                     CaptureProtection.protectionViewConfig.appSwitcher.image = screenImage
                     resolver(nil)
@@ -377,7 +386,9 @@ class CaptureProtection: RCTEventEmitter {
                 } else if config.type == Constants.CaptureProtectionType.IMAGE {
                     CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.imageView(
                         tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
-                        image: config.image!)
+                        image: config.image!,
+                        backgroundColor: config.backgroundColor,
+                        contentMode: config.contentMode)
                 } else {
                     CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.view(
                         tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
@@ -410,7 +421,7 @@ class CaptureProtection: RCTEventEmitter {
                         if config.type == Constants.CaptureProtectionType.TEXT {
                             CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.textView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, text: config.text!, textColor: config.textColor, backgroundColor: config.backgroundColor)
                         } else if config.type == Constants.CaptureProtectionType.IMAGE {
-                            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.imageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!)
+                            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.imageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!, backgroundColor: config.backgroundColor, contentMode: config.contentMode)
                         } else {
                             CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.view(
                                 tag: Constants.TAG_APP_SWITCHER_PROTECTION,

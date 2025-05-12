@@ -1,4 +1,9 @@
-import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
+import {
+  Image,
+  NativeEventEmitter,
+  NativeModules,
+  Platform,
+} from 'react-native';
 import {
   CaptureProtectionAndroidNativeModules,
   CaptureProtectionFunction,
@@ -74,7 +79,9 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
       } else if (typeof appSwitcher === 'object') {
         if ('image' in appSwitcher) {
           await CaptureProtectionIOSModule?.preventAppSwitcherWithImage?.(
-            appSwitcher.image
+            Image.resolveAssetSource(appSwitcher.image as unknown as number),
+            appSwitcher?.backgroundColor,
+            appSwitcher?.contentMode
           );
         } else {
           await CaptureProtectionIOSModule?.preventAppSwitcherWithText?.(
@@ -92,7 +99,9 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
       } else if (typeof record === 'object') {
         if ('image' in record) {
           await CaptureProtectionIOSModule?.preventScreenRecordWithImage?.(
-            record.image
+            Image.resolveAssetSource(record.image as unknown as number),
+            record?.backgroundColor,
+            record?.contentMode
           );
         } else {
           await CaptureProtectionIOSModule?.preventScreenRecordWithText?.(

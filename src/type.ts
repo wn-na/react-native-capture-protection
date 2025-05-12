@@ -1,4 +1,4 @@
-import { EmitterSubscription } from 'react-native';
+import { EmitterSubscription, ImageResolvedAssetSource } from 'react-native';
 
 export enum CaptureEventType {
   NONE,
@@ -28,6 +28,8 @@ export type IOSProtectionCustomScreenOption = {
 export type IOSProtectionScreenOption =
   | {
       image: NodeRequire;
+      backgroundColor?: `#${string}`;
+      contentMode?: ContentMode;
     }
   | IOSProtectionCustomScreenOption;
 
@@ -45,6 +47,21 @@ export type AllowOption = {
 
 export type CaptureEventCallback = (eventType: CaptureEventType) => void;
 
+export enum ContentMode {
+  scaleToFill = 0,
+  scaleAspectFit = 1,
+  scaleAspectFill = 2,
+  redraw = 3,
+  center = 4,
+  top = 5,
+  bottom = 6,
+  left = 7,
+  right = 8,
+  topLeft = 9,
+  topRight = 10,
+  bottomLeft = 11,
+  bottomRight = 12,
+}
 export interface CaptureProtectionIOSNativeModules {
   allowScreenshot: () => Promise<void>;
   preventScreenshot: () => Promise<void>;
@@ -55,7 +72,11 @@ export interface CaptureProtectionIOSNativeModules {
     textColor?: `#${string}`,
     backgroundColor?: `#${string}`
   ) => Promise<void>;
-  preventScreenRecordWithImage: (image: NodeRequire) => Promise<void>;
+  preventScreenRecordWithImage: (
+    image: ImageResolvedAssetSource,
+    backgroundColor?: `#${string}`,
+    contentMode?: number
+  ) => Promise<void>;
   allowAppSwitcher: () => Promise<void>;
   preventAppSwitcher: () => Promise<void>;
   preventAppSwitcherWithText: (
@@ -63,7 +84,11 @@ export interface CaptureProtectionIOSNativeModules {
     textColor?: `#${string}`,
     backgroundColor?: `#${string}`
   ) => Promise<void>;
-  preventAppSwitcherWithImage: (image: NodeRequire) => Promise<void>;
+  preventAppSwitcherWithImage: (
+    image: ImageResolvedAssetSource,
+    backgroundColor?: `#${string}`,
+    contentMode?: number
+  ) => Promise<void>;
   hasListener: () => Promise<boolean>;
   protectionStatus: () => Promise<CaptureProtectionModuleStatus>;
   isScreenRecording: () => Promise<boolean | undefined>;

@@ -37,6 +37,7 @@ public struct ProtectorViewOption {
     public var backgroundColor: String = "#FFFFFF"
     public var image: UIImage?
     public var type: Constants.CaptureProtectionType = Constants.CaptureProtectionType.NONE
+    public var contentMode: UIView.ContentMode = .scaleAspectFit
 }
 
 public class ProtectionViewConfig {
