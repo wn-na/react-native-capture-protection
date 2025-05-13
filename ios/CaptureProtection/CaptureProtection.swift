@@ -395,20 +395,22 @@ class CaptureProtection: RCTEventEmitter {
                         backgroundColor: config.backgroundColor
                     )
                 }
-                if let window = UIApplication.shared.delegate?.window {
-                    window?.rootViewController?.addChild(CaptureProtection.protectionViewConfig.screenRecord.viewController!)
-                    window?.rootViewController?.view.addSubview(CaptureProtection.protectionViewConfig.screenRecord.viewController!.view)
-                    window?.makeKeyAndVisible()
-                    CaptureProtection.protectionViewConfig.screenRecord.viewController!.didMove(toParent: window?.rootViewController)
-                }
+
+                let protectionWindow = UIWindow(frame: UIScreen.main.bounds)
+                protectionWindow.windowLevel = .alert + 1
+                protectionWindow.backgroundColor = .clear
+                protectionWindow.rootViewController = CaptureProtection.protectionViewConfig.screenRecord.viewController
+                protectionWindow.makeKeyAndVisible()
+                CaptureProtection.protectionViewConfig.screenRecord.window = protectionWindow
             }
         }
     }
-    
+
     private func removeScreenRecordView() {
-        UIViewUtils.remove(viewController: CaptureProtection.protectionViewConfig.screenRecord.viewController)
+        CaptureProtection.protectionViewConfig.screenRecord.window?.isHidden = true
+        CaptureProtection.protectionViewConfig.screenRecord.window = nil
     }
-    
+
     // MARK: - Protection UI with App Swither
     private func secureAppSwitcher() {
         removeAppSwitcherView() { [self] in
@@ -428,23 +430,24 @@ class CaptureProtection: RCTEventEmitter {
                                 backgroundColor: config.backgroundColor
                             )
                         }
-                        if let window = UIApplication.shared.delegate?.window {
-                            window?.rootViewController?.addChild(CaptureProtection.protectionViewConfig.appSwitcher.viewController!)
-                            window?.rootViewController?.view.addSubview(CaptureProtection.protectionViewConfig.appSwitcher.viewController!.view)
-                            window?.makeKeyAndVisible()
-                            CaptureProtection.protectionViewConfig.appSwitcher.viewController!.didMove(toParent: window?.rootViewController)
-                        }
+
+                        let protectionWindow = UIWindow(frame: UIScreen.main.bounds)
+                        protectionWindow.windowLevel = .alert + 1
+                        protectionWindow.backgroundColor = .clear
+                        protectionWindow.rootViewController = CaptureProtection.protectionViewConfig.appSwitcher.viewController
+                        protectionWindow.makeKeyAndVisible()
+                        CaptureProtection.protectionViewConfig.appSwitcher.window = protectionWindow
                     }
                 }
                 protectorTimer!.resume()
             }
         }
     }
-    
+
     private func removeAppSwitcherView(completion: (() -> Void)? = nil) {
         self.cancelTimer()
-        UIViewUtils.remove(viewController: CaptureProtection.protectionViewConfig.appSwitcher.viewController) {
-            completion?()
-        }
+        CaptureProtection.protectionViewConfig.appSwitcher.window?.isHidden = true
+        CaptureProtection.protectionViewConfig.appSwitcher.window = nil
+        completion?()
     }
 }
