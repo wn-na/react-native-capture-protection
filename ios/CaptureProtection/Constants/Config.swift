@@ -1,6 +1,6 @@
 //
 //  Config.swift
-//  
+//
 //
 //  Created by lethe(wn-na, lecheln00@gmail.com) on 4/6/25.
 //
@@ -22,7 +22,7 @@ public class CaptureProtectionConfig {
         (prevent.screenshot ? Constants.CaptureEventType.PREVENT_SCREEN_CAPTURE.rawValue : 0)
         + (prevent.screenRecord ? Constants.CaptureEventType.PREVENT_SCREEN_RECORDING.rawValue : 0)
         + (prevent.appSwitcher ? Constants.CaptureEventType.PREVENT_SCREEN_APP_SWITCHING.rawValue : 0)
-        
+
         if result == 0 {
             return Constants.CaptureEventType.ALLOW.rawValue
         }
@@ -38,6 +38,7 @@ public struct ProtectorViewOption {
     public var image: UIImage?
     public var type: Constants.CaptureProtectionType = Constants.CaptureProtectionType.NONE
     public var contentMode: UIView.ContentMode = .scaleAspectFit
+    public var window: UIWindow?
 }
 
 public class ProtectionViewConfig {
