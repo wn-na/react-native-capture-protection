@@ -3,11 +3,4 @@
     <!-- Android 14 only support -->
     <uses-permission android:name="android.permission.DETECT_SCREEN_CAPTURE"
         android:minSdkVersion="34" />
-
-    <!-- Android 13 only support -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="32" />
-
-    <!-- else -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" android:minSdkVersion="33" />
 </manifest>
