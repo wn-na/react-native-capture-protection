@@ -35,6 +35,7 @@ open class CaptureProtectionLifecycleListener(
     var eventJob: Job? = null
 
     companion object {
+        const val FULL_MEDIA_CAPTURE_FLAVOR = "fullMediaCapture"
         var screenCaptureCallback: Any? = null
         var registerScreenCaptureCallback: Method? = null
         var unregisterScreenCaptureCallback: Method? = null
@@ -219,7 +220,7 @@ open class CaptureProtectionLifecycleListener(
     }
 
     private fun checkPermission(): Boolean {
-        return if (BuildConfig.FLAVOR == "fullMediaCapture") {
+        return if (BuildConfig.FLAVOR == FULL_MEDIA_CAPTURE_FLAVOR) {
             try {
                 reactCurrentActivity?.let {
                     ContextCompat.checkSelfPermission(it, Constants.requestPermission) ==
@@ -239,7 +240,7 @@ open class CaptureProtectionLifecycleListener(
     }
 
     fun requestStoragePermission(): Boolean {
-        return if (BuildConfig.FLAVOR == "fullMediaCapture") {
+        return if (BuildConfig.FLAVOR == FULL_MEDIA_CAPTURE_FLAVOR) {
             try {
                 val isGranted = checkStoragePermission()
                 if (!isGranted) {
@@ -263,7 +264,7 @@ open class CaptureProtectionLifecycleListener(
     }
 
     private fun requestPermission() {
-        if (BuildConfig.FLAVOR == "fullMediaCapture") {
+        if (BuildConfig.FLAVOR == FULL_MEDIA_CAPTURE_FLAVOR) {
             reactCurrentActivity?.let {
                 ActivityCompat.requestPermissions(it, arrayOf(Constants.requestPermission), 1)
             }
