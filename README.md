@@ -37,6 +37,40 @@ yarn add react-native-capture-protection
 npx expo install react-native-capture-protection
 ```
 
+## Setting
+
+### Android
+
+On Android versions below 14, storage permissions are required to determine if a screen capture is enabled.
+
+- `android/app/build.gradle`
+
+```
+    defaultConfig {
+        ...
+        missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"
+    }
+```
+
+### In Play Store
+
+- `Details on Google Play's Photo and Video Permissions policy READ_MEDIA_IMAGES`
+
+```
+Used by the application to detect screenshots, to detect the presence of screenshot files on the user's media.
+```
+
+### If you want to use it without detecting the capture, please set the following settings.
+
+- `android/app/build.gradle`
+
+```
+    defaultConfig {
+        ...
+        missingDimensionStrategy "react-native-capture-protection", "restrictedCapture"
+    }
+```
+
 ## How to Use
 
 ```js

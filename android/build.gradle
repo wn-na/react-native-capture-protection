@@ -57,6 +57,18 @@ android {
       minifyEnabled false
     }
   }
+  
+  flavorDimensions "react-native-capture-protection"
+  productFlavors {
+    fullMediaCapture {
+		  dimension "react-native-capture-protection"
+    }
+
+    restrictedCapture {
+		  dimension "react-native-capture-protection"
+    }
+
+  }
 
   lintOptions {
     disable 'GradleCompatible'

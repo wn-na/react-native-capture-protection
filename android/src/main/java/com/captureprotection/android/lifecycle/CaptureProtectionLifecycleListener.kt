@@ -80,27 +80,28 @@ open class CaptureProtectionLifecycleListener(
 
     fun triggerCaptureEvent(type: CaptureEventType) {
         eventJob?.cancel()
-        eventJob = CoroutineScope(Dispatchers.Main).launch {
-            try {
-                Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, type.value)
-                delay(1000)
-                if (screens.isNotEmpty()) {
-                    Response.sendEvent(
-                        reactContext,
-                        Constants.LISTENER_EVENT_NAME,
-                        CaptureEventType.RECORDING.value
-                    )
-                } else {
-                    Response.sendEvent(
-                        reactContext,
-                        Constants.LISTENER_EVENT_NAME,
-                        CaptureEventType.NONE.value
-                    )
+        eventJob =
+                CoroutineScope(Dispatchers.Main).launch {
+                    try {
+                        Response.sendEvent(reactContext, Constants.LISTENER_EVENT_NAME, type.value)
+                        delay(1000)
+                        if (screens.isNotEmpty()) {
+                            Response.sendEvent(
+                                    reactContext,
+                                    Constants.LISTENER_EVENT_NAME,
+                                    CaptureEventType.RECORDING.value
+                            )
+                        } else {
+                            Response.sendEvent(
+                                    reactContext,
+                                    Constants.LISTENER_EVENT_NAME,
+                                    CaptureEventType.NONE.value
+                            )
+                        }
+                    } catch (e: Exception) {
+                        Log.e(Constants.NAME, "Error in triggerCaptureEvent: ${e.message}")
+                    }
                 }
-            } catch (e: Exception) {
-                Log.e(Constants.NAME, "Error in triggerCaptureEvent: ${e.message}")
-            }
-        }
     }
 
     fun registerDisplayListener() {
@@ -218,41 +219,54 @@ open class CaptureProtectionLifecycleListener(
     }
 
     private fun checkPermission(): Boolean {
-        return try {
-            reactCurrentActivity?.let {
-                ContextCompat.checkSelfPermission(it, Constants.requestPermission) ==
-                        PackageManager.PERMISSION_GRANTED
+        return if (BuildConfig.FLAVOR == "fullMediaCapture") {
+            try {
+                reactCurrentActivity?.let {
+                    ContextCompat.checkSelfPermission(it, Constants.requestPermission) ==
+                            PackageManager.PERMISSION_GRANTED
+                }
+                        ?: false
+            } catch (e: Exception) {
+                Log.e(
+                        Constants.NAME,
+                        "checkStoragePermission raised Exception: ${e.localizedMessage}"
+                )
+                false
             }
-                    ?: false
-        } catch (e: Exception) {
-            Log.e(Constants.NAME, "checkStoragePermission raised Exception: ${e.localizedMessage}")
+        } else {
             false
         }
     }
 
     fun requestStoragePermission(): Boolean {
-        return try {
-            val isGranted = checkStoragePermission()
-            if (!isGranted) {
-                Log.d(Constants.NAME, "Permission is revoked")
-                requestPermission()
+        return if (BuildConfig.FLAVOR == "fullMediaCapture") {
+            try {
+                val isGranted = checkStoragePermission()
+                if (!isGranted) {
+                    Log.d(Constants.NAME, "Permission is revoked")
+                    requestPermission()
+                    false
+                } else {
+                    Log.d(Constants.NAME, "Permission is granted")
+                    true
+                }
+            } catch (e: Exception) {
+                Log.e(
+                        Constants.NAME,
+                        "requestStoragePermission raised Exception: ${e.localizedMessage}"
+                )
                 false
-            } else {
-                Log.d(Constants.NAME, "Permission is granted")
-                true
             }
-        } catch (e: Exception) {
-            Log.e(
-                    Constants.NAME,
-                    "requestStoragePermission raised Exception: ${e.localizedMessage}"
-            )
+        } else {
             false
         }
     }
 
     private fun requestPermission() {
-        reactCurrentActivity?.let {
-            ActivityCompat.requestPermissions(it, arrayOf(Constants.requestPermission), 1)
+        if (BuildConfig.FLAVOR == "fullMediaCapture") {
+            reactCurrentActivity?.let {
+                ActivityCompat.requestPermissions(it, arrayOf(Constants.requestPermission), 1)
+            }
         }
     }
 
