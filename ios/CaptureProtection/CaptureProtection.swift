@@ -60,15 +60,19 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     @objc func allowScreenshot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        secureScreenshot(isSecure: false)
-        sendListener(status: CaptureProtection.config.protectionStatus())
-        resolver(true)
+        DispatchQueue.main.async { [self] in
+            secureScreenshot(isSecure: false)
+            sendListener(status: CaptureProtection.config.protectionStatus())
+            resolver(true)
+        }
     }
     
     @objc func preventScreenshot(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        secureScreenshot(isSecure: true)
-        sendListener(status: CaptureProtection.config.protectionStatus())
-        resolver(true)
+        DispatchQueue.main.async { [self] in
+            secureScreenshot(isSecure: true)
+            sendListener(status: CaptureProtection.config.protectionStatus())
+            resolver(true)
+        }
     }
     
     @objc func allowScreenRecord(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
@@ -133,17 +137,21 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     @objc func allowAppSwitcher(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        CaptureProtection.config.prevent.appSwitcher = false
-        removeAppSwitcherView()
-        sendListener(status: CaptureProtection.config.protectionStatus())
-        resolver(nil)
+        DispatchQueue.main.async { [self] in
+            CaptureProtection.config.prevent.appSwitcher = false
+            removeAppSwitcherView()
+            sendListener(status: CaptureProtection.config.protectionStatus())
+            resolver(nil)
+        }
     }
     
     @objc func preventAppSwitcher(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        CaptureProtection.config.prevent.appSwitcher = true
-        CaptureProtection.protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.NONE
-        sendListener(status: CaptureProtection.config.protectionStatus())
-        resolver(nil)
+        DispatchQueue.main.async { [self] in
+            CaptureProtection.config.prevent.appSwitcher = true
+            CaptureProtection.protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.NONE
+            sendListener(status: CaptureProtection.config.protectionStatus())
+            resolver(nil)
+        }
     }
     
     @objc func preventAppSwitcherWithText(_ text: String,
@@ -151,13 +159,15 @@ class CaptureProtection: RCTEventEmitter {
                                           backgroundColor: String,
                                           resolver: @escaping RCTPromiseResolveBlock,
                                           rejecter: @escaping RCTPromiseRejectBlock) {
-        CaptureProtection.config.prevent.appSwitcher = true
-        CaptureProtection.protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.TEXT
-        CaptureProtection.protectionViewConfig.appSwitcher.text = text
-        CaptureProtection.protectionViewConfig.appSwitcher.textColor = textColor
-        CaptureProtection.protectionViewConfig.appSwitcher.backgroundColor = backgroundColor
-        sendListener(status: CaptureProtection.config.protectionStatus())
-        resolver(nil)
+        DispatchQueue.main.async { [self] in
+            CaptureProtection.config.prevent.appSwitcher = true
+            CaptureProtection.protectionViewConfig.appSwitcher.type = Constants.CaptureProtectionType.TEXT
+            CaptureProtection.protectionViewConfig.appSwitcher.text = text
+            CaptureProtection.protectionViewConfig.appSwitcher.textColor = textColor
+            CaptureProtection.protectionViewConfig.appSwitcher.backgroundColor = backgroundColor
+            sendListener(status: CaptureProtection.config.protectionStatus())
+            resolver(nil)
+        }
     }
     
     @objc func preventAppSwitcherWithImage(_ image: NSDictionary,
