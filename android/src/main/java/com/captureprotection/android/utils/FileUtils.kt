@@ -4,6 +4,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import com.facebook.react.bridge.*
+import java.util.Locale
 
 class FileUtils {
     companion object {
@@ -26,7 +27,7 @@ class FileUtils {
                         )
                 if (cursor != null && cursor.moveToFirst()) {
                     val path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA))
-                    return (path != null && path.lowercase().contains("screenshots"))
+                    return (path != null && path.lowercase(Locale.ROOT).contains("screenshots"))
                 }
                 return false
             } finally {
