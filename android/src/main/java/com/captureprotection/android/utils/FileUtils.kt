@@ -26,7 +26,7 @@ class FileUtils {
                         )
                 if (cursor != null && cursor.moveToFirst()) {
                     val path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA))
-                    return (path != null && path.toLowerCase().contains("screenshots"))
+                    return (path != null && path.lowercase().contains("screenshots"))
                 }
                 return false
             } finally {
