@@ -37,9 +37,7 @@ yarn add react-native-capture-protection
 npx expo install react-native-capture-protection
 ```
 
-## Setting
-
-### Android
+### Android (required)
 
 On Android versions below 14, storage permissions are required to determine if a screen capture is enabled.
 
