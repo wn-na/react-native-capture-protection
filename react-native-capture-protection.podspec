@@ -12,7 +12,7 @@ Pod::Spec.new do |s|
   s.authors      = package["author"]
 
   s.platforms    = { :ios => "13.0" }
-  s.source       = { :git => "https://github.com/0xlethe/react-native-capture-protection.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/wn-na/react-native-capture-protection.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm}"
 
