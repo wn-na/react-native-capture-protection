@@ -1,75 +1,133 @@
-# react-native-capture-protection
+# 🛡️ react-native-capture-protection
 
-> 🛡️ A React Native library to prevent screen capture, screenshots and app switcher for enhanced security. Fully compatible with both Expo and CLI.
+A React Native library to **prevent screen capture, screenshots, and app switcher previews**—providing enhanced security for your app.  
+Fully compatible with **React Native CLI** and **Expo (Dev Client only)**.
 
-| screenshot                                                                                                                           | app switcher                                                                                                                                                                            |
-| ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ![Simulator Screen Recording](https://user-images.githubusercontent.com/37437842/206644553-e4c3f2bc-b624-47ac-a005-132199e049b2.gif) | ![Simulator Screen Recording - iPhone 15 Pro - 2024-07-02 at 21 19 17](https://github.com/0xlethe/react-native-capture-protection/assets/37437842/ac98e942-8dba-4e5d-9f23-fa10f946b26b) |
+---
 
-## Features
+## 📸 Screenshots
 
-- iOS Capture Protection (Screenshot, Screen Recording, App Switcher)
-- Android Capture Protection (Screenshot, Screen Recording)
-- Event Listener for Capture Events
-- Provider and Hooks Support
-- Android 14 Support
+| Screenshot Protection                                                                                                      | App Switcher Protection                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| ![Screen Recording](https://user-images.githubusercontent.com/37437842/206644553-e4c3f2bc-b624-47ac-a005-132199e049b2.gif) | ![App Switcher](https://github.com/wn-na/react-native-capture-protection/assets/37437842/ac98e942-8dba-4e5d-9f23-fa10f946b26b) |
 
-## Installation
+---
 
-### Use npm
+## ✨ Features
+
+- 🔒 iOS: Screenshot, Screen Recording & App Switcher protection
+- 🔒 Android: Screenshot & Screen Recording protection
+- 📡 Event listeners for capture events
+- 🧩 Hooks & Provider support
+- 📱 Android 14 support
+
+---
+
+## 🚀 Installation
+
+> ⚠️ **Using React Native < 0.70?**  
+> The latest v2.x version may not be compatible with versions below 0.70.  
+> It is recommended to use [`v1.9.17`](https://github.com/wn-na/react-native-capture-protection/releases/tag/v1.9.17) for better stability with older React Native projects.
+
+### Using npm
 
 ```sh
 npm install react-native-capture-protection
 ```
 
-### Use yarn
+### Using yarn
 
 ```sh
 yarn add react-native-capture-protection
 ```
 
-### use Expo
+### Using with Expo
 
-> Only Expo Dev client compatible
-> This library has native code, so it's not work for Expo Go but it's compatible with custom dev client.
+> ⚠️ Expo Dev Client only
+> This library includes native code, so it does not work with Expo Go. You must use a custom dev client.
 
-```
+```sh
 npx expo install react-native-capture-protection
 ```
 
-### Android (required)
+## ⚙️ Android Configuration (Required)
 
-On Android versions below 14, storage permissions are required to determine if a screen capture is enabled.
+Android 13 and Below: Enable Storage Permissions
+To detect screenshots on Android versions below 14, add the following
 
-- `android/app/build.gradle`
+### **React Native CLI**
 
-```
-    defaultConfig {
-        ...
-        missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"
-    }
-```
+add to `android/app/build.gradle`
 
-### In Play Store
-
-- `Details on Google Play's Photo and Video Permissions policy READ_MEDIA_IMAGES`
-
-```
-Used by the application to detect screenshots, to detect the presence of screenshot files on the user's media.
+```gradle
+defaultConfig {
+    ...
+    missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"
+}
 ```
 
-### If you want to use it without detecting the capture, please set the following settings.
+### **Expo (Dev Client only)**
 
-- `android/app/build.gradle`
+add to `app.json`
+
+```json
+{
+  ...
+  "plugins": [
+    ...,
+    [
+      "react-native-capture-protection",
+      {
+        "captureType": "fullMediaCapture"
+      }
+    ]
+  ]
+}
+```
+
+### Google Play Store Policy (READ_MEDIA_IMAGES)
+
+If publishing to the Play Store, explain the usage of READ_MEDIA_IMAGES like this:
 
 ```
-    defaultConfig {
-        ...
-        missingDimensionStrategy "react-native-capture-protection", "restrictedCapture"
-    }
+Used by the application to detect screenshots, by checking for screenshot files in the user’s media storage.
 ```
 
-## How to Use
+## Disable Capture Detection (Optional)
+
+If you want to disable screenshot detection and only block recording/switcher:
+
+### **React Native CLI**
+
+add to `android/app/build.gradle`
+
+```gradle
+defaultConfig {
+    ...
+    missingDimensionStrategy "react-native-capture-protection", "restrictedCapture"
+}
+```
+
+### **Expo (Dev Client only)**
+
+add to `app.json`
+
+```json
+{
+  ...
+  "plugins": [
+    ...,
+    [
+      "react-native-capture-protection",
+      {
+        "captureType": "restrictedCapture"
+      }
+    ]
+  ]
+}
+```
+
+## 📦 Usage
 
 ```js
 import {
@@ -127,17 +185,19 @@ const Component = () => {
 };
 ```
 
-## Documentation
+## 📚 Documentation
 
-- [Methods](./docs/method.md) - Detailed documentation of all available methods
-- [Types](./docs/type.md) - Type definitions and interfaces
-- [Migration Guide](./docs/MIGRATION.md) - Guide for migrating from v1.x to v2.x
+🧪 [Methods](./docs/method.md) – All available API methods
 
-## Contributing
+📘 [Types](./docs/type.md) – Type definitions and interfaces
 
-See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+🛠 [Migration Guide](./docs/MIGRATION.md) – From v1.x to v2.x
 
-## License
+## 🤝 Contributing
+
+See CONTRIBUTING.md for details on contributing to this project.
+
+## 📄 License
 
 MIT
 
