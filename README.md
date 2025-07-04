@@ -55,6 +55,14 @@ npx expo install react-native-capture-protection
 Android 13 and Below: Enable Storage Permissions
 To detect screenshots on Android versions below 14, add the following
 
+### 🔧 iOS Setup
+
+If you're developing for iOS, don't forget to install CocoaPods dependencies after installing the package.
+
+```sh
+cd ios && pod install
+```
+
 ### **React Native CLI**
 
 add to `android/app/build.gradle`
