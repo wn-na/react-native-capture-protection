@@ -7,15 +7,17 @@ const pkg = require('../package.json');
 function addToDefaultConfigInBuildGradle(buildGradle, addLine) {
   const lines = buildGradle.split('\n');
   const anchorIndex = lines.findIndex((line) => line.match('defaultConfig'));
-  lines.splice(anchorIndex + 1, 0, addLine);
+  if (lines.findIndex((line) => line.includes(addLine)) === -1) {
+    lines.splice(anchorIndex + 1, 0, `\t\t${addLine}`);
+  }
   return lines.join('\n');
 }
 
 function withPlugin(config, props) {
   const missingDimensionStrategy =
     props?.captureType === 'restrictedCapture'
-      ? `\tmissingDimensionStrategy "react-native-capture-protection", "restrictedCapture"`
-      : `\tmissingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"`;
+      ? `missingDimensionStrategy "react-native-capture-protection", "restrictedCapture"`
+      : `missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"`;
 
   try {
     return withAppBuildGradle(config, (config) => {
