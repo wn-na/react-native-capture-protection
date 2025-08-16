@@ -22,7 +22,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
 
   @ReactMethod
   fun hasListener(promise: Promise) {
-    currentActivity?.runOnUiThread {
+    getCurrentActivity()?.runOnUiThread {
       try {
         val params = super.hasScreenCaptureListener()
         promise.resolve(params)
@@ -34,7 +34,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
 
   @ReactMethod
   fun isScreenRecording(promise: Promise) {
-    currentActivity?.runOnUiThread {
+    getCurrentActivity()?.runOnUiThread {
       try {
         promise.resolve(super.screens.size > 1)
       } catch (e: Exception) {
@@ -45,7 +45,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
 
   @ReactMethod
   fun prevent(promise: Promise) {
-    currentActivity?.runOnUiThread {
+    getCurrentActivity()?.runOnUiThread {
       try {
         val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
         currentActivity!!.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -65,7 +65,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
 
   @ReactMethod
   fun allow(promise: Promise) {
-    currentActivity?.runOnUiThread {
+    getCurrentActivity()?.runOnUiThread {
       try {
         val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
         currentActivity!!.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -83,7 +83,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
 
   @ReactMethod
   fun protectionStatus(promise: Promise) {
-    currentActivity?.runOnUiThread {
+    getCurrentActivity()?.runOnUiThread {
       try {
         val flags = ActivityUtils.isSecureFlag(reactContext)
         promise.resolve(flags)
