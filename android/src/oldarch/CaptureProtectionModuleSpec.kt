@@ -6,7 +6,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.Promise
 
 abstract class CaptureProtectionModuleSpec internal constructor(context: ReactApplicationContext) :
-CaptureProtectionLifecycleListener(context) {
+  ReactContextBaseJavaModule(context) {
   abstract fun hasListener(promise: Promise)
   abstract fun isScreenRecording(promise: Promise)
   abstract fun prevent(promise: Promise)
