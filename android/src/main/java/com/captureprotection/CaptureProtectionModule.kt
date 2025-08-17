@@ -8,7 +8,9 @@ import com.facebook.react.module.annotations.ReactModule
 
 @ReactModule(name = Constants.NAME)
 class CaptureProtectionModule(private val reactContext: ReactApplicationContext) :
-        CaptureProtectionLifecycleListener(reactContext) {
+  CaptureProtectionModuleSpec(reactContext) {
+    
+  override fun getName() = Constants.NAME
 
   @ReactMethod
   fun addListener(eventName: String) {
@@ -21,7 +23,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   }
 
   @ReactMethod
-  fun hasListener(promise: Promise) {
+  override fun hasListener(promise: Promise) {
     getCurrentActivity()?.runOnUiThread {
       try {
         val params = super.hasScreenCaptureListener()
@@ -33,7 +35,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   }
 
   @ReactMethod
-  fun isScreenRecording(promise: Promise) {
+  override fun isScreenRecording(promise: Promise) {
     getCurrentActivity()?.runOnUiThread {
       try {
         promise.resolve(super.screens.size > 1)
@@ -44,7 +46,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   }
 
   @ReactMethod
-  fun prevent(promise: Promise) {
+  override fun prevent(promise: Promise) {
     getCurrentActivity()?.runOnUiThread {
       try {
         val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
@@ -64,7 +66,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   }
 
   @ReactMethod
-  fun allow(promise: Promise) {
+  override fun allow(promise: Promise) {
     getCurrentActivity()?.runOnUiThread {
       try {
         val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
@@ -82,7 +84,7 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   }
 
   @ReactMethod
-  fun protectionStatus(promise: Promise) {
+  override fun protectionStatus(promise: Promise) {
     getCurrentActivity()?.runOnUiThread {
       try {
         val flags = ActivityUtils.isSecureFlag(reactContext)
@@ -94,13 +96,13 @@ class CaptureProtectionModule(private val reactContext: ReactApplicationContext)
   }
 
   @ReactMethod
-  fun requestPermission(promise: Promise) {
+  override fun requestPermission(promise: Promise) {
     val isPermission = super.requestStoragePermission()
     promise.resolve(isPermission)
   }
 
   @ReactMethod
-  fun checkPermission(promise: Promise) {
+  override fun checkPermission(promise: Promise) {
     val isPermission = super.checkStoragePermission()
     promise.resolve(isPermission)
   }
