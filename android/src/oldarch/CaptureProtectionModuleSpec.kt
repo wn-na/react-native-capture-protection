@@ -14,4 +14,6 @@ abstract class CaptureProtectionModuleSpec internal constructor(context: ReactAp
   abstract fun protectionStatus(promise: Promise)
   abstract fun requestPermission(promise: Promise)
   abstract fun checkPermission(promise: Promise)
+  abstract fun addListener(eventName: String)
+  abstract fun removeListeners(count: Double)
 }

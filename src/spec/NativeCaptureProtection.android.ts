@@ -9,6 +9,8 @@ export interface Spec extends TurboModule {
   isScreenRecording: () => Promise<boolean | undefined>;
   requestPermission: () => Promise<boolean>;
   checkPermission: () => Promise<boolean>;
+  addListener: (eventName: string) => void;
+  removeListeners: (count: number) => void;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('CaptureProtection');

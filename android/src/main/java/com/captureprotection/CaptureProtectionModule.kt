@@ -319,19 +319,20 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
         return displayListener != null
     }
 
+    
   @ReactMethod
-  fun addListener(eventName: String) {
+  override fun addListener(eventName: String) {
     addScreenCaptureListener()
   }
 
   @ReactMethod
-  fun removeListeners(count: Int) {
+  override fun removeListeners(count: Double) {
     // removeScreenCaptureListener()
   }
 
   @ReactMethod
   override fun hasListener(promise: Promise) {
-    getCurrentActivity()?.runOnUiThread {
+    reactContext.currentActivity?.runOnUiThread {
       try {
         val params = hasScreenCaptureListener()
         promise.resolve(params)
@@ -343,7 +344,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
 
   @ReactMethod
   override fun isScreenRecording(promise: Promise) {
-    getCurrentActivity()?.runOnUiThread {
+    reactContext.currentActivity?.runOnUiThread {
       try {
         promise.resolve(screens.size > 1)
       } catch (e: Exception) {
@@ -354,7 +355,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
 
   @ReactMethod
   override fun prevent(promise: Promise) {
-    getCurrentActivity()?.runOnUiThread {
+    reactContext.currentActivity?.runOnUiThread {
       try {
         val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
         currentActivity!!.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -374,7 +375,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
 
   @ReactMethod
   override fun allow(promise: Promise) {
-    getCurrentActivity()?.runOnUiThread {
+    reactContext.currentActivity?.runOnUiThread {
       try {
         val currentActivity = ActivityUtils.getReactCurrentActivity(reactContext)
         currentActivity!!.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
@@ -392,7 +393,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
 
   @ReactMethod
   override fun protectionStatus(promise: Promise) {
-    getCurrentActivity()?.runOnUiThread {
+    reactContext.currentActivity?.runOnUiThread {
       try {
         val flags = ActivityUtils.isSecureFlag(reactContext)
         promise.resolve(flags)
