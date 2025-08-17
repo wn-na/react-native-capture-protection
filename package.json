@@ -158,6 +158,7 @@
     "source": "src",
     "output": "lib",
     "targets": [
+      "codegen",
       "commonjs",
       "module",
       [
@@ -170,5 +171,18 @@
   },
   "dependencies": {
     "expo-dev-client": "~5.2.1"
+  },
+  "codegenConfig": {
+    "name": "CaptureProtectionSpec",
+    "type": "modules",
+    "jsSrcsDir": "./src/spec",
+    "outputDir": {
+      "ios": "ios/generated",
+      "android": "android/generated"
+    },
+    "android": {
+      "javaPackageName": "com.captureprotection"
+    },
+    "includesGeneratedCode": true
   }
 }
