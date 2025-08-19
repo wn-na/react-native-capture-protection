@@ -10,10 +10,12 @@ import {
   CaptureProtectionIOSNativeModules,
   ContentMode,
 } from './type';
+// @ts-expect-error
+const isTurboModuleEnabled = global.__turboModuleProxy != null;
 
-import CaptureProtectionSpec from './spec/NativeCaptureProtection';
-const CaptureProtectionModule =
-  CaptureProtectionSpec ?? NativeModules?.CaptureProtection ?? {};
+const CaptureProtectionModule = isTurboModuleEnabled
+  ? require('./spec/NativeCaptureProtection').default
+  : NativeModules?.CaptureProtection;
 
 const CaptureProtectionAndroidModule =
   CaptureProtectionModule as CaptureProtectionAndroidNativeModules;

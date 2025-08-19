@@ -116,7 +116,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
                     object : DisplayManager.DisplayListener {
                         override fun onDisplayAdded(displayId: Int) {
                             reactCurrentActivity?.runOnUiThread {
-                                if (displayManager.getDisplay(displayId) == null) {
+                                if (displayManager.getDisplay(displayId) != null) {
                                     screens.add(displayId)
                                 }
                                 try {
