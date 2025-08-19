@@ -26,7 +26,7 @@ import com.facebook.react.module.annotations.ReactModule
 class CaptureProtectionModule(private val reactContext: ReactApplicationContext) :
 CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
 
-    override fun getName() = Constants.NAME
+    override fun getName() = NAME
 
     val displayManager: DisplayManager =
             reactContext.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
@@ -37,6 +37,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
     var eventJob: Job? = null
 
     companion object {
+        const val NAME = Constants.NAME
         const val FULL_MEDIA_CAPTURE_FLAVOR = "fullMediaCapture"
         var screenCaptureCallback: Any? = null
         var registerScreenCaptureCallback: Method? = null

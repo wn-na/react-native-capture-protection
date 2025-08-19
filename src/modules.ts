@@ -1,4 +1,9 @@
-import { Image, NativeEventEmitter, Platform } from 'react-native';
+import {
+  Image,
+  NativeEventEmitter,
+  NativeModules,
+  Platform,
+} from 'react-native';
 import {
   CaptureProtectionAndroidNativeModules,
   CaptureProtectionFunction,
@@ -7,7 +12,8 @@ import {
 } from './type';
 
 import CaptureProtectionSpec from './spec/NativeCaptureProtection';
-const CaptureProtectionModule = CaptureProtectionSpec;
+const CaptureProtectionModule =
+  CaptureProtectionSpec ?? NativeModules?.CaptureProtection ?? {};
 
 const CaptureProtectionAndroidModule =
   CaptureProtectionModule as CaptureProtectionAndroidNativeModules;
