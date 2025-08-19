@@ -10,8 +10,12 @@ import {
   CaptureProtectionIOSNativeModules,
   ContentMode,
 } from './type';
+// @ts-expect-error
+const isTurboModuleEnabled = global.__turboModuleProxy != null;
 
-const CaptureProtectionModule = NativeModules?.CaptureProtection ?? {};
+const CaptureProtectionModule = isTurboModuleEnabled
+  ? require('./spec/NativeCaptureProtection').default
+  : NativeModules?.CaptureProtection;
 
 const CaptureProtectionAndroidModule =
   CaptureProtectionModule as CaptureProtectionAndroidNativeModules;
@@ -81,7 +85,7 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
         if ('image' in appSwitcher) {
           await CaptureProtectionIOSModule?.preventAppSwitcherWithImage?.(
             Image.resolveAssetSource(appSwitcher.image as unknown as number),
-            appSwitcher?.backgroundColor ?? "#ffffff",
+            appSwitcher?.backgroundColor ?? '#ffffff',
             appSwitcher?.contentMode ?? ContentMode.scaleAspectFit
           );
         } else {
@@ -101,8 +105,8 @@ const prevent: CaptureProtectionFunction['prevent'] = async (option) => {
         if ('image' in record) {
           await CaptureProtectionIOSModule?.preventScreenRecordWithImage?.(
             Image.resolveAssetSource(record.image as unknown as number),
-            record?.backgroundColor ?? "#ffffff",
-            record?.contentMode?? ContentMode.scaleAspectFit
+            record?.backgroundColor ?? '#ffffff',
+            record?.contentMode ?? ContentMode.scaleAspectFit
           );
         } else {
           await CaptureProtectionIOSModule?.preventScreenRecordWithText?.(
