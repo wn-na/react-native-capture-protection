@@ -1,21 +1,20 @@
 {
   "name": "react-native-capture-protection",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "description": "🛡️ A React Native library to prevent and detect for screen capture, screenshots and app switcher for enhanced security. Fully compatible with both Expo and CLI.",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
   "types": "./lib/typescript/commonjs/index.d.ts",
   "source": "src/index",
   "files": [
+    "app.plugin.js",
+    "plugins",
     "src",
     "lib",
     "android",
     "ios",
     "cpp",
-    "app.plugin.js",
-    "plugins",
     "*.podspec",
-    "!lib/typescript/example",
     "!ios/build",
     "!android/build",
     "!android/gradle",
@@ -75,7 +74,8 @@
     "react-native-builder-bob": "^0.40.13",
     "release-it": "^15.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^4.5.2"
+    "typescript": "^4.5.2",
+    "expo-dev-client": "~5.2.1"
   },
   "resolutions": {
     "@react": "17.0.21"
@@ -172,15 +172,10 @@
       "typescript"
     ]
   },
-  "dependencies": {
-    "expo-dev-client": "~5.2.1"
-  },
+  "dependencies": {},
   "codegenConfig": {
     "name": "CaptureProtectionSpec",
-    "type": "all",
-    "jsSrcsDir": "./src/spec",
-    "android": {
-      "javaPackageName": "com.captureprotection"
-    }
+    "type": "modules",
+    "jsSrcsDir": "./src/spec"
   }
 }
