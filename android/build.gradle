@@ -2,13 +2,16 @@ buildscript {
   // Buildscript is evaluated before everything else so we can't use getExtOrDefault
   def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["CaptureProtection_kotlinVersion"]
 
+  def agp_version = rootProject.ext.has("androidGradlePluginVersion")
+    ? rootProject.ext.get("androidGradlePluginVersion")
+    : "7.2.1"
   repositories {
     google()
     mavenCentral()
   }
 
   dependencies {
-    classpath "com.android.tools.build:gradle:7.2.1"
+    classpath "com.android.tools.build:gradle:${agp_version}"
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
