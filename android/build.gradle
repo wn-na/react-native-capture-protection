@@ -94,11 +94,14 @@ android {
   sourceSets {
     main {
       if (isNewArchitectureEnabled()) {
-        java.srcDirs += ["src/newarch"]
+        java.srcDirs += [
+          "src/newarch", 
+          "generated/java",
+          "generated/jni"
+          ]
       } else {
         java.srcDirs += ["src/oldarch"]
       }
-      println java.srcDirs
     }
   }
 }

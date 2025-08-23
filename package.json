@@ -1,11 +1,10 @@
 {
   "name": "react-native-capture-protection",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "🛡️ A React Native library to prevent and detect for screen capture, screenshots and app switcher for enhanced security. Fully compatible with both Expo and CLI.",
-  "main": "lib/commonjs/index",
-  "module": "lib/module/index",
-  "types": "lib/typescript/index.d.ts",
-  "react-native": "src/index",
+  "main": "./lib/commonjs/index.js",
+  "module": "./lib/module/index.js",
+  "types": "./lib/typescript/commonjs/index.d.ts",
   "source": "src/index",
   "files": [
     "src",
@@ -56,11 +55,11 @@
   "devDependencies": {
     "@arkweid/lefthook": "^0.7.7",
     "@commitlint/config-conventional": "^17.0.2",
+    "@react-native-community/cli": "^20.0.1",
     "@react-native-community/eslint-config": "^3.0.2",
     "@release-it/conventional-changelog": "^5.0.0",
     "@types/jest": "^28.1.2",
-    "@types/react": "~17.0.21",
-    "@types/react-native": "0.70.0",
+    "@types/react": "^18",
     "commitlint": "^17.0.2",
     "del-cli": "^5.0.0",
     "eslint": "^8.4.1",
@@ -71,15 +70,15 @@
     "jest": "^28.1.1",
     "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
-    "react": "18.1.0",
-    "react-native": "0.70.6",
-    "react-native-builder-bob": "^0.20.1",
+    "react": "^18",
+    "react-native": "0.77.0",
+    "react-native-builder-bob": "^0.40.13",
     "release-it": "^15.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^4.5.2"
   },
   "resolutions": {
-    "@types/react": "17.0.21"
+    "@react": "17.0.21"
   },
   "peerDependencies": {
     "expo": ">=47.0.0",
@@ -158,15 +157,19 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "codegen",
-      "commonjs",
-      "module",
       [
-        "typescript",
+        "module",
         {
-          "project": "tsconfig.build.json"
+          "esm": true
         }
-      ]
+      ],
+      [
+        "commonjs",
+        {
+          "esm": true
+        }
+      ],
+      "typescript"
     ]
   },
   "dependencies": {
@@ -174,15 +177,10 @@
   },
   "codegenConfig": {
     "name": "CaptureProtectionSpec",
-    "type": "modules",
+    "type": "all",
     "jsSrcsDir": "./src/spec",
-    "outputDir": {
-      "ios": "ios/generated",
-      "android": "android/generated"
-    },
     "android": {
       "javaPackageName": "com.captureprotection"
-    },
-    "includesGeneratedCode": true
+    }
   }
 }
