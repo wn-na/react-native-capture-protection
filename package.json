@@ -67,7 +67,6 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "expo": "^51.0.39",
-    "expo-dev-client": "~5.2.1",
     "expo-module-scripts": "^3.0.0",
     "jest": "^28.1.1",
     "pod-install": "^0.1.0",

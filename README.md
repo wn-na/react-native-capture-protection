@@ -193,11 +193,27 @@ const Component = () => {
 };
 ```
 
-## Jest
+## Jest integration
 
-### Overriding Mock logic
+### With Jest Setup
 
-> You can override mock implementation, by replacing its inner functions:
+1. Add to your `jest.config.js`:
+
+```javascript
+module.exports = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+};
+```
+
+2. Create jest.setup.js:
+
+```javascript
+jest.mock('react-native-capture-protection', () =>
+  require('react-native-capture-protection/jest/capture-protection-mock')
+);
+```
+
+### Overriding mock
 
 ```typescript
 import { CaptureProtection } from "react-native-capture-protection/jest/capture-protection-mock";
