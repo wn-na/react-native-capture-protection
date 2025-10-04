@@ -193,6 +193,24 @@ const Component = () => {
 };
 ```
 
+## Jest
+
+### Overriding Mock logic
+
+> You can override mock implementation, by replacing its inner functions:
+
+```typescript
+import { CaptureProtection } from "react-native-capture-protection/jest/capture-protection-mock";
+
+...
+
+    test("prevent is called", async () => {
+        await CaptureProtection.prevent();
+        expect(CaptureProtection.prevent).toHaveBeenCalled();
+    });
+
+```
+
 ## 📚 Documentation
 
 🧪 [Methods](./docs/method.md) – All available API methods
