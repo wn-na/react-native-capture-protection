@@ -172,7 +172,9 @@
       "typescript"
     ]
   },
-  "dependencies": {},
+  "dependencies": {
+    "expo-dev-client": "~5.2.1"
+  },
   "codegenConfig": {
     "name": "CaptureProtectionSpec",
     "type": "modules",
