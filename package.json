@@ -52,6 +52,7 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
+  "dependencies": {},
   "devDependencies": {
     "@arkweid/lefthook": "^0.7.7",
     "@commitlint/config-conventional": "^17.0.2",
@@ -67,7 +68,8 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "expo": "^51.0.39",
-    "expo-module-scripts": "^3.0.0",
+    "expo-dev-client": ">=5.2.1",
+    "expo-module-scripts": ">=3.0.0",
     "jest": "^28.1.1",
     "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
@@ -84,10 +86,14 @@
   "peerDependencies": {
     "expo": ">=47.0.0",
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "expo-dev-client": ">=5.0.0"
   },
   "peerDependenciesMeta": {
     "expo": {
+      "optional": true
+    },
+    "expo-dev-client": {
       "optional": true
     }
   },
@@ -165,9 +171,6 @@
       ],
       "typescript"
     ]
-  },
-  "dependencies": {
-    "expo-dev-client": "~5.2.1"
   },
   "codegenConfig": {
     "name": "CaptureProtectionSpec",
