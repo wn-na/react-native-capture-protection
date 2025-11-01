@@ -4,8 +4,6 @@
     "build:android": {
       "inputs": [
         "package.json",
-        "plugins",
-        "app.plugin.js",
         "android",
         "!android/build",
         "src/*.ts",
@@ -22,8 +20,6 @@
       "inputs": [
         "package.json",
         "*.podspec",
-        "plugins",
-        "app.plugin.js",
         "ios",
         "src/*.ts",
         "src/*.tsx",
