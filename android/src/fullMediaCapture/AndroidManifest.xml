@@ -2,7 +2,4 @@
     <!-- Android 13 only support -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-
-    <!-- else -->
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" android:minSdkVersion="33" android:maxSdkVersion="34" />
 </manifest>
