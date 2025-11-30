@@ -12,8 +12,8 @@ import Foundation
 @objc(CaptureProtection)
 class CaptureProtection: RCTEventEmitter {
     private var hasListeners = false
-    static var config = CaptureProtectionConfig()
-    static var protectionViewConfig = ProtectionViewConfig()
+    static let config = CaptureProtectionConfig()
+    static let protectionViewConfig = ProtectionViewConfig()
     private var protectorTimer: DispatchSourceTimer?
     
     override init() {
