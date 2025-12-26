@@ -15,9 +15,9 @@ function addToDefaultConfigInBuildGradle(buildGradle, addLine) {
 
 function withPlugin(config, props) {
   const missingDimensionStrategy =
-    props?.captureType === 'restrictedCapture'
-      ? `missingDimensionStrategy "react-native-capture-protection", "restrictedCapture"`
-      : `missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"`;
+    props?.captureType === 'base'
+      ? `missingDimensionStrategy "react-native-capture-protection", "base"`
+      : `missingDimensionStrategy "react-native-capture-protection", "callbackTiramisu"`;
 
   try {
     return withAppBuildGradle(config, (config) => {

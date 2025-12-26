@@ -50,11 +50,6 @@ yarn add react-native-capture-protection
 npx expo install react-native-capture-protection
 ```
 
-## ⚙️ Android Configuration (Required)
-
-Android 13 and Below: Enable Storage Permissions
-To detect screenshots on Android versions below 14, add the following
-
 ### 🔧 iOS Setup
 
 If you're developing for iOS, don't forget to install CocoaPods dependencies after installing the package.
@@ -63,6 +58,11 @@ If you're developing for iOS, don't forget to install CocoaPods dependencies aft
 cd ios && pod install
 ```
 
+## ⚙️ Android Configuration (Required)
+
+By default, it supports capture prevention, capture permission, and capture detection on Android 14 and above.
+If you want capture detection(not prevent, only listener) support for versions below 14 (Android 10–13), please refer to the [Support Below Android 14, Capture Detection (Optional)](#support-below-android-14-capture-detection-optional) below.
+
 ### **React Native CLI**
 
 add to `android/app/build.gradle`
@@ -70,7 +70,7 @@ add to `android/app/build.gradle`
 ```gradle
 defaultConfig {
     ...
-    missingDimensionStrategy "react-native-capture-protection", "fullMediaCapture"
+    missingDimensionStrategy "react-native-capture-protection", "base"
 }
 ```
 
@@ -86,12 +86,17 @@ add to `app.json`
     [
       "react-native-capture-protection",
       {
-        "captureType": "fullMediaCapture"
+        "captureType": "base"
       }
     ]
   ]
 }
 ```
+
+## Support Below Android 14, Capture Detection (Optional)
+
+On Android versions below 14, it detects screen captures using the sensitive READ_MEDIA_IMAGES permission.
+If you want detection to work on Android versions below 14, please configure the settings as follows.
 
 ### Google Play Store Policy (READ_MEDIA_IMAGES)
 
@@ -101,10 +106,6 @@ If publishing to the Play Store, explain the usage of READ_MEDIA_IMAGES like thi
 Used by the application to detect screenshots, by checking for screenshot files in the user’s media storage.
 ```
 
-## Disable Capture Detection (Optional)
-
-If you want to disable screenshot detection and only block recording/switcher:
-
 ### **React Native CLI**
 
 add to `android/app/build.gradle`
@@ -112,7 +113,7 @@ add to `android/app/build.gradle`
 ```gradle
 defaultConfig {
     ...
-    missingDimensionStrategy "react-native-capture-protection", "restrictedCapture"
+    missingDimensionStrategy "react-native-capture-protection", "callbackTiramisu"
 }
 ```
 
@@ -128,7 +129,7 @@ add to `app.json`
     [
       "react-native-capture-protection",
       {
-        "captureType": "restrictedCapture"
+        "captureType": "callbackTiramisu"
       }
     ]
   ]
