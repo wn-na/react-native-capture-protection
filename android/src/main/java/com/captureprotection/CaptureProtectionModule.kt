@@ -38,7 +38,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
 
     companion object {
         const val NAME = Constants.NAME
-        const val FULL_MEDIA_CAPTURE_FLAVOR = "fullMediaCapture"
+        const val SUPPORT_UNDER_TIRAMISU_CAPTURE_CALLBACK = "callbackTiramisu"
         var screenCaptureCallback: Any? = null
         var registerScreenCaptureCallback: Method? = null
         var unregisterScreenCaptureCallback: Method? = null
@@ -240,7 +240,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
     }
 
     private fun checkPermission(): Boolean {
-        return if (BuildConfig.FLAVOR == FULL_MEDIA_CAPTURE_FLAVOR) {
+        return if (BuildConfig.FLAVOR == SUPPORT_UNDER_TIRAMISU_CAPTURE_CALLBACK) {
             try {
                 reactCurrentActivity?.let {
                     ContextCompat.checkSelfPermission(it, Constants.requestPermission) ==
@@ -260,7 +260,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
     }
 
     fun requestStoragePermission(): Boolean {
-        return if (BuildConfig.FLAVOR == FULL_MEDIA_CAPTURE_FLAVOR) {
+        return if (BuildConfig.FLAVOR == SUPPORT_UNDER_TIRAMISU_CAPTURE_CALLBACK) {
             try {
                 val isGranted = checkStoragePermission()
                 if (!isGranted) {
@@ -284,7 +284,7 @@ CaptureProtectionModuleSpec(reactContext), LifecycleEventListener {
     }
 
     private fun requestPermission() {
-        if (BuildConfig.FLAVOR == FULL_MEDIA_CAPTURE_FLAVOR) {
+        if (BuildConfig.FLAVOR == SUPPORT_UNDER_TIRAMISU_CAPTURE_CALLBACK) {
             reactCurrentActivity?.let {
                 ActivityCompat.requestPermissions(it, arrayOf(Constants.requestPermission), 1)
             }

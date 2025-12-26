@@ -81,11 +81,11 @@ android {
   
   flavorDimensions "react-native-capture-protection"
   productFlavors {
-    fullMediaCapture {
+    callbackTiramisu {
 		  dimension "react-native-capture-protection"
     }
 
-    restrictedCapture {
+    base {
 		  dimension "react-native-capture-protection"
     }
 
