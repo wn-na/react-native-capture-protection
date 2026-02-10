@@ -61,7 +61,7 @@ cd ios && pod install
 ## ⚙️ Android Configuration (Required)
 
 By default, it supports capture prevention, capture permission, and capture detection on Android 14 and above.
-If you want capture detection(not prevent, only listener) support for versions below 14 (Android 10–13), please refer to the [Support Below Android 14, Capture Detection (Optional)](#support-below-android-14-capture-detection-optional) below.
+On Android versions below 14 (Android 10-13), capture prevention and capture permission are supported by default; if you want capture detection support too, please refer to the [Capture Detection Before Android 14 (Optional)](#capture-detection-before-android-14-optional) below.
 
 ### **React Native CLI**
 
@@ -93,10 +93,9 @@ add to `app.json`
 }
 ```
 
-## Support Below Android 14, Capture Detection (Optional)
+## Capture Detection Before Android 14 (Optional)
 
-On Android versions below 14, it detects screen captures using the sensitive READ_MEDIA_IMAGES permission.
-If you want detection to work on Android versions below 14, please configure the settings as follows.
+On Android versions below 14 (Android 10-13), capture prevention and capture permission are supported by default and require no more steps. However, if you want capture detection to work on Android versions below 14, please configure the settings as follows (it detects screen captures using the sensitive READ_MEDIA_IMAGES permission):
 
 ### Google Play Store Policy (READ_MEDIA_IMAGES)
 
