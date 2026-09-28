@@ -15,6 +15,7 @@ class CaptureProtection: RCTEventEmitter {
     static let config = CaptureProtectionConfig()
     static let protectionViewConfig = ProtectionViewConfig()
     private var protectorTimer: DispatchSourceTimer?
+    private var screenRecordObserverToken: NSObjectProtocol?
     
     override init() {
         super.init()
@@ -279,13 +280,22 @@ class CaptureProtection: RCTEventEmitter {
     private func addScreenRecordObserver() {
         guard !CaptureProtection.config.observer.screenRecord else { return }
         CaptureProtection.config.observer.screenRecord = true
-        NotificationCenter.default.addObserver(self, selector: #selector(eventScreenRecord), name: UIScreen.capturedDidChangeNotification, object: nil)
+        screenRecordObserverToken = NotificationCenter.default.addObserver(
+            forName: UIScreen.capturedDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.eventScreenRecord(notification: notification)
+        }
     }
     
     private func removeScreenRecordObserver() {
         guard CaptureProtection.config.observer.screenRecord else { return }
         CaptureProtection.config.observer.screenRecord = false
-        NotificationCenter.default.removeObserver(self, name: UIScreen.capturedDidChangeNotification, object: nil)
+        if let token = screenRecordObserverToken {
+            NotificationCenter.default.removeObserver(token)
+            screenRecordObserverToken = nil
+        }
     }
     
     private func addAppSwitcherObserver() {
@@ -417,8 +427,16 @@ class CaptureProtection: RCTEventEmitter {
     }
 
     private func removeScreenRecordView() {
-        CaptureProtection.protectionViewConfig.screenRecord.window?.isHidden = true
-        CaptureProtection.protectionViewConfig.screenRecord.window = nil
+        let removeView = {
+            CaptureProtection.protectionViewConfig.screenRecord.window?.isHidden = true
+            CaptureProtection.protectionViewConfig.screenRecord.window = nil
+        }
+
+        if Thread.isMainThread {
+            removeView()
+        } else {
+            DispatchQueue.main.async(execute: removeView)
+        }
     }
 
     // MARK: - Protection UI with App Swither
