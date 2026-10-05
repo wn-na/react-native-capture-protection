@@ -3,6 +3,7 @@
 //  Copyright © 2025 Facebook. All rights reserved.
 //
 
+import React
 import Foundation
 
 public class Constants {
