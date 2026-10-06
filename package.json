@@ -30,6 +30,8 @@
     "./jest/capture-protection-mock": "./jest/capture-protection-mock.js"
   },
   "files": [
+    "Package.swift",
+    "react-native-spm-prefix.h",
     "app.plugin.js",
     "plugins",
     "src",
