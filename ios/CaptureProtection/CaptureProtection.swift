@@ -16,6 +16,10 @@ class CaptureProtection: RCTEventEmitter {
     static let protectionViewConfig = ProtectionViewConfig()
     private var protectorTimer: DispatchSourceTimer?
     private var screenRecordObserverToken: NSObjectProtocol?
+    private var sceneActivationObserverToken: NSObjectProtocol?
+    private var sceneCaptureRegistration: Any?
+    private weak var observedCaptureWindow: UIWindow?
+    private var lastCaptureState: Bool?
     
     override init() {
         super.init()
@@ -116,9 +120,6 @@ class CaptureProtection: RCTEventEmitter {
                                             resolver: @escaping RCTPromiseResolveBlock,
                                             rejecter: @escaping RCTPromiseRejectBlock) {
         DispatchQueue.main.async { [self] in
-            self.eventScreenRecordImmediate(true)
-            sendListener(status: CaptureProtection.config.protectionStatus())
-            
             do {
                 CaptureProtection.protectionViewConfig.screenRecord.type = Constants.CaptureProtectionType.IMAGE
                 CaptureProtection.protectionViewConfig.screenRecord.backgroundColor = backgroundColor
@@ -126,6 +127,8 @@ class CaptureProtection: RCTEventEmitter {
                 CaptureProtection.protectionViewConfig.screenRecord.contentMode = UIView.ContentMode(rawValue: Int(contentMode)) ?? .scaleAspectFit
                 if let screenImage = RCTConvert.uiImage(image) {
                     CaptureProtection.protectionViewConfig.screenRecord.image = screenImage
+                    eventScreenRecordImmediate(true)
+                    sendListener(status: CaptureProtection.config.protectionStatus())
                     resolver(nil)
                 } else {
                     throw NSError(domain: "preventScreenRecordWithImage", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid image data"])
@@ -210,10 +213,12 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     @objc func isScreenRecording(_ resolver: @escaping RCTPromiseResolveBlock, rejecter: @escaping RCTPromiseRejectBlock) {
-        if let isCaptured = UIScreen.main.value(forKey: "isCaptured") as? Bool {
-            resolver(isCaptured)
-        } else {
-            rejecter("isScreenRecording", "Failed to get screen recording status", nil)
+        DispatchQueue.main.async {
+            if let isCaptured = UIViewUtils.isScreenCaptured() {
+                resolver(isCaptured)
+            } else {
+                rejecter("isScreenRecording", "Failed to get screen recording status", nil)
+            }
         }
     }
     
@@ -228,7 +233,7 @@ class CaptureProtection: RCTEventEmitter {
         if hasListeners {
             sendListener(status: event.rawValue)
             DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 1) { [self] in
-                if let isCaptured = UIScreen.main.value(forKey: "isCaptured") as? Bool, isCaptured == true {
+                if let isCaptured = UIViewUtils.isScreenCaptured(), isCaptured == true {
                     sendListener(status: Constants.CaptureEventType.RECORDING.rawValue)
                 } else {
                     sendListener(status: Constants.CaptureEventType.UNKNOWN.rawValue)
@@ -242,7 +247,9 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     @objc func eventScreenRecord(notification: Notification, isEvent: Bool = false) {
-        if let isCaptured = UIScreen.main.value(forKey: "isCaptured") as? Bool {
+        if let isCaptured = UIViewUtils.isScreenCaptured() {
+            if !isEvent && lastCaptureState == isCaptured { return }
+            lastCaptureState = isCaptured
             if isCaptured {
                 if CaptureProtection.config.prevent.screenRecord {
                     secureScreenRecord()
@@ -258,6 +265,13 @@ class CaptureProtection: RCTEventEmitter {
     }
     
     func eventScreenRecordImmediate(_ prevent: Bool = false) {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.eventScreenRecordImmediate(prevent)
+            }
+            return
+        }
+        MainActor.assumeIsolated { addSceneCaptureObserver() }
         if (prevent) {
             CaptureProtection.config.prevent.screenRecord = true
         }
@@ -287,6 +301,17 @@ class CaptureProtection: RCTEventEmitter {
         ) { [weak self] notification in
             self?.eventScreenRecord(notification: notification)
         }
+        sceneActivationObserverToken = NotificationCenter.default.addObserver(
+            forName: UIScene.didActivateNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.addSceneCaptureObserver() }
+            self?.eventScreenRecordImmediate()
+        }
+        DispatchQueue.main.async { [weak self] in
+            self?.addSceneCaptureObserver()
+        }
     }
     
     private func removeScreenRecordObserver() {
@@ -296,6 +321,34 @@ class CaptureProtection: RCTEventEmitter {
             NotificationCenter.default.removeObserver(token)
             screenRecordObserverToken = nil
         }
+        if let token = sceneActivationObserverToken {
+            NotificationCenter.default.removeObserver(token)
+            sceneActivationObserverToken = nil
+        }
+        MainActor.assumeIsolated { removeSceneCaptureObserver() }
+    }
+
+    @MainActor
+    private func addSceneCaptureObserver() {
+        guard CaptureProtection.config.observer.screenRecord else { return }
+        guard #available(iOS 17.0, *), let window = UIViewUtils.mainWindow() else { return }
+        if observedCaptureWindow === window { return }
+        removeSceneCaptureObserver()
+        observedCaptureWindow = window
+        sceneCaptureRegistration = window.registerForTraitChanges([UITraitSceneCaptureState.self]) { [weak self] (window: UIWindow, _: UITraitCollection) in
+            self?.eventScreenRecord(notification: Notification(name: UIScreen.capturedDidChangeNotification))
+        }
+    }
+
+    @MainActor
+    private func removeSceneCaptureObserver() {
+        if #available(iOS 17.0, *),
+           let window = observedCaptureWindow,
+           let registration = sceneCaptureRegistration as? any UITraitChangeRegistration {
+            window.unregisterForTraitChanges(registration)
+        }
+        sceneCaptureRegistration = nil
+        observedCaptureWindow = nil
     }
     
     private func addAppSwitcherObserver() {
@@ -374,12 +427,12 @@ class CaptureProtection: RCTEventEmitter {
                         CaptureProtection.protectionViewConfig.secureTextField!.isUserInteractionEnabled = false
                         CaptureProtection.protectionViewConfig.secureTextField!.tag = Constants.TAG_SCREENSHOT_PROTECTION
                         CaptureProtection.protectionViewConfig.secureTextField!.isSecureTextEntry = true
-                        if let window = UIApplication.shared.delegate?.window {
-                            window?.makeKeyAndVisible()
+                        if let window = UIViewUtils.mainWindow() {
+                            window.makeKeyAndVisible()
                             
-                            window?.layer.superlayer?.addSublayer(CaptureProtection.protectionViewConfig.secureTextField!.layer)
-                            CaptureProtection.protectionViewConfig.secureTextField?.layer.sublayers?.first?.addSublayer(window!.layer)
-                            CaptureProtection.protectionViewConfig.secureTextField?.layer.sublayers?.last?.addSublayer(window!.layer)
+                            window.layer.superlayer?.addSublayer(CaptureProtection.protectionViewConfig.secureTextField!.layer)
+                            CaptureProtection.protectionViewConfig.secureTextField?.layer.sublayers?.first?.addSublayer(window.layer)
+                            CaptureProtection.protectionViewConfig.secureTextField?.layer.sublayers?.last?.addSublayer(window.layer)
                         }
                     }
                 }
@@ -395,34 +448,32 @@ class CaptureProtection: RCTEventEmitter {
     private func secureScreenRecord() {
         removeScreenRecordView()
         if CaptureProtection.config.prevent.screenRecord {
-            DispatchQueue.main.async {
-                let config = CaptureProtection.protectionViewConfig.screenRecord
-                if config.type == Constants.CaptureProtectionType.TEXT {
-                    CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.textView(
-                        tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
-                        text: config.text!,
-                        textColor: config.textColor,
-                        backgroundColor: config.backgroundColor)
-                } else if config.type == Constants.CaptureProtectionType.IMAGE {
-                    CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.imageView(
-                        tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
-                        image: config.image!,
-                        backgroundColor: config.backgroundColor,
-                        contentMode: config.contentMode)
-                } else {
-                    CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.view(
-                        tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
-                        backgroundColor: config.backgroundColor
-                    )
-                }
-
-                let protectionWindow = UIWindow(frame: UIScreen.main.bounds)
-                protectionWindow.windowLevel = .alert + 1
-                protectionWindow.backgroundColor = .clear
-                protectionWindow.rootViewController = CaptureProtection.protectionViewConfig.screenRecord.viewController
-                protectionWindow.makeKeyAndVisible()
-                CaptureProtection.protectionViewConfig.screenRecord.window = protectionWindow
+            let config = CaptureProtection.protectionViewConfig.screenRecord
+            if config.type == Constants.CaptureProtectionType.TEXT {
+                CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.textView(
+                    tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
+                    text: config.text!,
+                    textColor: config.textColor,
+                    backgroundColor: config.backgroundColor)
+            } else if config.type == Constants.CaptureProtectionType.IMAGE {
+                CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.imageView(
+                    tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
+                    image: config.image!,
+                    backgroundColor: config.backgroundColor,
+                    contentMode: config.contentMode)
+            } else {
+                CaptureProtection.protectionViewConfig.screenRecord.viewController = UIViewUtils.view(
+                    tag: Constants.TAG_RECORD_PROTECTION_SCREEN,
+                    backgroundColor: config.backgroundColor
+                )
             }
+
+            let protectionWindow = UIViewUtils.makeOverlayWindow()
+            protectionWindow.windowLevel = .alert + 1
+            protectionWindow.backgroundColor = .clear
+            protectionWindow.rootViewController = CaptureProtection.protectionViewConfig.screenRecord.viewController
+            protectionWindow.isHidden = false
+            CaptureProtection.protectionViewConfig.screenRecord.window = protectionWindow
         }
     }
 
@@ -459,11 +510,11 @@ class CaptureProtection: RCTEventEmitter {
                             )
                         }
 
-                        let protectionWindow = UIWindow(frame: UIScreen.main.bounds)
+                        let protectionWindow = UIViewUtils.makeOverlayWindow()
                         protectionWindow.windowLevel = .alert + 1
                         protectionWindow.backgroundColor = .clear
                         protectionWindow.rootViewController = CaptureProtection.protectionViewConfig.appSwitcher.viewController
-                        protectionWindow.makeKeyAndVisible()
+                        protectionWindow.isHidden = false
                         CaptureProtection.protectionViewConfig.appSwitcher.window = protectionWindow
                     }
                 }
