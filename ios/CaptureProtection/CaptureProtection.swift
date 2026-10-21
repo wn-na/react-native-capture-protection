@@ -14,7 +14,6 @@ class CaptureProtection: RCTEventEmitter {
     private var hasListeners = false
     static let config = CaptureProtectionConfig()
     static let protectionViewConfig = ProtectionViewConfig()
-    private var protectorTimer: DispatchSourceTimer?
     private var screenRecordObserverToken: NSObjectProtocol?
     private var sceneActivationObserverToken: NSObjectProtocol?
     private var sceneCaptureRegistration: Any?
@@ -33,14 +32,6 @@ class CaptureProtection: RCTEventEmitter {
         removeBundleReloadObserver()
     }
     
-    
-    func cancelTimer() {
-        if let timer = protectorTimer {
-            timer.setEventHandler {}
-            timer.cancel()
-            protectorTimer = nil
-        }
-    }
     
     // MARK: - React Native Module Function
     @objc(supportedEvents)
@@ -354,16 +345,14 @@ class CaptureProtection: RCTEventEmitter {
     private func addAppSwitcherObserver() {
         guard !CaptureProtection.config.observer.appSwitcher else { return }
         CaptureProtection.config.observer.appSwitcher = true
-        NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: nil) { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.secureAppSwitcher()
-            }
+        // Cover the app synchronously: iOS takes the app switcher snapshot right after these notifications,
+        // so a cover added later (async dispatch or timer) can miss it and the snapshot shows the real screen.
+        NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.secureAppSwitcher()
         }
         
-        NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil) { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.secureAppSwitcher()
-            }
+        NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.secureAppSwitcher()
         }
         
         NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: nil) { [weak self] _ in
@@ -394,7 +383,6 @@ class CaptureProtection: RCTEventEmitter {
     private func addBundleReloadObserver() {
         NotificationCenter.default.addObserver(forName: NSNotification.Name.RCTTriggerReloadCommand, object: nil, queue: .main) { [weak self] _ in
             DispatchQueue.main.async {
-                self?.cancelTimer()
                 if let secureTextField = CaptureProtection.protectionViewConfig.secureTextField {
                     secureTextField.isSecureTextEntry = false
                 }
@@ -492,39 +480,32 @@ class CaptureProtection: RCTEventEmitter {
 
     // MARK: - Protection UI with App Swither
     private func secureAppSwitcher() {
-        removeAppSwitcherView() { [self] in
-            if CaptureProtection.config.prevent.appSwitcher {
-                protectorTimer = DispatchSource.makeTimerSource(queue: DispatchQueue.main)
-                protectorTimer!.schedule(deadline: .now() + 0.05)
-                protectorTimer!.setEventHandler {
-                    DispatchQueue.main.async {
-                        let config = CaptureProtection.protectionViewConfig.appSwitcher
-                        if config.type == Constants.CaptureProtectionType.TEXT {
-                            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.textView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, text: config.text!, textColor: config.textColor, backgroundColor: config.backgroundColor)
-                        } else if config.type == Constants.CaptureProtectionType.IMAGE {
-                            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.imageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!, backgroundColor: config.backgroundColor, contentMode: config.contentMode)
-                        } else {
-                            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.view(
-                                tag: Constants.TAG_APP_SWITCHER_PROTECTION,
-                                backgroundColor: config.backgroundColor
-                            )
-                        }
+        guard CaptureProtection.config.prevent.appSwitcher else { return }
+        // Already covered on willResignActive; don't rebuild the cover on didEnterBackground.
+        if let window = CaptureProtection.protectionViewConfig.appSwitcher.window, !window.isHidden { return }
+        removeAppSwitcherView()
 
-                        let protectionWindow = UIViewUtils.makeOverlayWindow()
-                        protectionWindow.windowLevel = .alert + 1
-                        protectionWindow.backgroundColor = .clear
-                        protectionWindow.rootViewController = CaptureProtection.protectionViewConfig.appSwitcher.viewController
-                        protectionWindow.isHidden = false
-                        CaptureProtection.protectionViewConfig.appSwitcher.window = protectionWindow
-                    }
-                }
-                protectorTimer!.resume()
-            }
+        let config = CaptureProtection.protectionViewConfig.appSwitcher
+        if config.type == Constants.CaptureProtectionType.TEXT {
+            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.textView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, text: config.text!, textColor: config.textColor, backgroundColor: config.backgroundColor)
+        } else if config.type == Constants.CaptureProtectionType.IMAGE {
+            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.imageView(tag: Constants.TAG_APP_SWITCHER_PROTECTION, image: config.image!, backgroundColor: config.backgroundColor, contentMode: config.contentMode)
+        } else {
+            CaptureProtection.protectionViewConfig.appSwitcher.viewController = UIViewUtils.view(
+                tag: Constants.TAG_APP_SWITCHER_PROTECTION,
+                backgroundColor: config.backgroundColor
+            )
         }
+
+        let protectionWindow = UIViewUtils.makeOverlayWindow()
+        protectionWindow.windowLevel = .alert + 1
+        protectionWindow.backgroundColor = .clear
+        protectionWindow.rootViewController = CaptureProtection.protectionViewConfig.appSwitcher.viewController
+        protectionWindow.isHidden = false
+        CaptureProtection.protectionViewConfig.appSwitcher.window = protectionWindow
     }
 
     private func removeAppSwitcherView(completion: (() -> Void)? = nil) {
-        self.cancelTimer()
         CaptureProtection.protectionViewConfig.appSwitcher.window?.isHidden = true
         CaptureProtection.protectionViewConfig.appSwitcher.window = nil
         completion?()
